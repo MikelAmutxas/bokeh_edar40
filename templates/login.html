@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row justify-content-center align-items-center h-100">
+        <div class="col col-sm-6 col-md-6 col-lg-4 col-xl-3">
+        	<h1 class="display-3">EDAR 4.0</h1>
+        	{% for message in get_flashed_messages() %}
+        		<div class="alert alert-danger" role="alert">
+        			{{ message }}
+        		</div>
+        	{% endfor %}
+            <form action="" method="post">
+                <div class="form-group">
+                    <input class="form-control form-control-lg" placeholder="Nombre de usuario" type="text" name="username">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" placeholder="Contraseña" type="password" name="password">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-info btn-lg btn-block" style="background-color: #3576be;">Iniciar sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

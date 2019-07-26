@@ -1,0 +1,15 @@
+p {
+    font: "Libre Baskerville", sans-serif;
+    text-align: justify;
+    text-justify: inter-word;
+    width: 80%;
+    max-width: 800;
+}
+
+.content {
+    padding: 5px;
+}
+
+.display-3 {
+    text-align: center;
+}

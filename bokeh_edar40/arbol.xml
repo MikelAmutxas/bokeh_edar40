@@ -1,0 +1,17 @@
+<results serviceId="EDAR_Cartuja_Prediccion">
+	<TreeModel>
+		O_TURBOS > 22377 
+		| I_DQOt_masa > 149298.484 
+		| | M_O2_Bio3_Zona_1 > 0.911: cluster_2 {cluster_3=27, cluster_0=25, cluster_1=0, cluster_2=290} 
+		| | M_O2_Bio3_Zona_1 ≤ 0.911: cluster_3 {cluster_3=115, cluster_0=27, cluster_1=5, cluster_2=40} 
+		| I_DQOt_masa ≤ 149298.484 
+		| | I_NTk_conc > 46.701: cluster_3 {cluster_3=1097, cluster_0=366, cluster_1=177, cluster_2=62} 
+		| | I_NTk_conc ≤ 46.701: cluster_1 {cluster_3=82, cluster_0=14, cluster_1=183, cluster_2=0} 
+		O_TURBOS ≤ 22377 
+		| I_NTk_conc > 50.700 
+		| | I_SO4 > 676.002: cluster_3 {cluster_3=197, cluster_0=97, cluster_1=9, cluster_2=79} 
+		| | I_SO4 ≤ 676.002: cluster_0 {cluster_3=297, cluster_0=1142, cluster_1=51, cluster_2=133} 
+		| I_NTk_conc ≤ 50.700 
+		| | I_NTk_masa > 8126.944: cluster_3 {cluster_3=27, cluster_0=8, cluster_1=3, cluster_2=7} 
+		| | I_NTk_masa ≤ 8126.944: cluster_1 {cluster_3=20, cluster_0=32, cluster_1=148, cluster_2=9}
+	</TreeModel>
