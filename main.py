@@ -13,6 +13,8 @@ from subprocess import Popen
 
 app = Flask(__name__)
 
+#Configuración de secret key y logging cuando ejecutamos sobre Gunicorn
+
 if __name__ != '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
 	gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -33,14 +35,18 @@ if __name__ != '__main__':
 	app.logger.addHandler(tornado_application_logger.handlers)
 	app.logger.setLevel(logging.INFO)
 
-
-user_principal_mapping = {'ibermatica': 'bokeh-epele', 'mikelamuchastegui': 'bokeh-cartuja'}
+#Usamos este diccionario para mapear los usuarios diponibles a los principales de kerberos. Tenemos dos principales, uno para cada caso de uso
+#si accedemos al caso de uso de EDAR Epele, accedemos mediante el principal bokeh-epele y si accedemos al caso de uso EDAR La Cartuja accedemos con el principal
+#bokeh-cartuja. En el caso de uso de La Cartuja no sería necesario ingresar mediante Kerberos, ya que, el propio software RapidMiner ya está configurado con esta opción 
+#y por lo tanto realiza la autenticación mediante Kerberos cuando es necesario.
+user_principal_mapping = {'ibermatica': 'bokeh-epele', 'rapidminer': 'bokeh-cartuja'}
 
 def do_kerberos_kinit(username):
 	kinit = '/usr/bin/kinit'
 	kinitopt = '-kt'
-	keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
-	#keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
+	#Para pruebas en local
+	#keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
+	keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
 	principal = str(username)
 	realm = 'EDAR40.EUS'
 	kinit_args = [ kinit, kinitopt, keytab, principal ]
@@ -100,6 +106,7 @@ def logout():
 	do_kerberos_kdestroy()
 	return redirect(url_for('index'))
 
+#Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
 	app.run(port=9995, debug=True, host='localhost')
