@@ -59,16 +59,19 @@ def do_kerberos_kdestroy():
 
 Thread(target=bk_worker).start()
 
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja/prediccion', methods=['GET'])
 def cartuja_prediction():
 	script = server_document('http://localhost:9090/cartuja/prediccion')
 	return render_template('cartuja.html', script=script)
 
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/epele', methods=['GET'])
 def epele():
 	script = server_document('http://localhost:9090/epele')
 	return render_template('epele.html', script=script)
 
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja', methods=['GET'])
 def cartuja():
 	script = server_document('http://localhost:9090/cartuja')
@@ -78,7 +81,7 @@ def cartuja():
 def index():
 	if 'username' in session:
 		username = str(session.get('username'))
-		if username == 'mikelamuchastegui':
+		if username == 'rapidminer':
 			return redirect(url_for('cartuja'))
 		else:
 			return redirect(url_for('epele'))
