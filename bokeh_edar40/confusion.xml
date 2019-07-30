@@ -1,4 +1,0 @@
-<results serviceId="EDAR_Cartuja_Prediccion">
-	<PerformanceVector>
-		PerformanceVector [ -----accuracy: 65.55% +/- 1.71% (micro average: 65.55%) ConfusionMatrix: True:	cluster_3	cluster_0	cluster_1	cluster_2 cluster_3:	1401	423	302	177 cluster_0: 358	1223	70	136 cluster_1:	60	25	203	8 cluster_2:	43	40	1	299 ]
-	</PerformanceVector>
