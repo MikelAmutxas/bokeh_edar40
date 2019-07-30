@@ -1,12 +1,10 @@
-#!/Users/mikelamuchastegui/Documents/TFG/Bokeh_Epele/venv/bin/python3
-# EASY-INSTALL-ENTRY-SCRIPT: 'bokeh==1.2.0','console_scripts','bokeh'
-__requires__ = 'bokeh==1.2.0'
+#!/Users/mikelamuchastegui/Documents/TFG/bokeh_edar40/venv/bin/python3.7
+# -*- coding: utf-8 -*-
 import re
 import sys
-from pkg_resources import load_entry_point
+
+from bokeh.__main__ import main
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-    sys.exit(
-        load_entry_point('bokeh==1.2.0', 'console_scripts', 'bokeh')()
-    )
+    sys.exit(main())

@@ -1,15 +1,17 @@
 # orm/identity.py
-# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2019 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 import weakref
+
 from . import attributes
-from .. import util
-from .. import exc as sa_exc
 from . import util as orm_util
+from .. import exc as sa_exc
+from .. import util
+
 
 class IdentityMap(object):
     def __init__(self):
@@ -31,7 +33,7 @@ class IdentityMap(object):
         in the map"""
         self.add(state)
 
-    def update(self, dict):
+    def update(self, dict_):
         raise NotImplementedError("IdentityMap uses add() to insert data")
 
     def clear(self):
@@ -84,7 +86,6 @@ class IdentityMap(object):
 
 
 class WeakInstanceDict(IdentityMap):
-
     def __getitem__(self, key):
         state = self._dict[key]
         o = state.obj()
@@ -145,8 +146,9 @@ class WeakInstanceDict(IdentityMap):
                         raise sa_exc.InvalidRequestError(
                             "Can't attach instance "
                             "%s; another instance with key %s is already "
-                            "present in this session." % (
-                                orm_util.state_str(state), state.key))
+                            "present in this session."
+                            % (orm_util.state_str(state), state.key)
+                        )
                 else:
                     return False
         self._dict[key] = state
@@ -253,6 +255,7 @@ class StrongInstanceDict(IdentityMap):
     """
 
     if util.py2k:
+
         def itervalues(self):
             return self._dict.itervalues()
 
@@ -282,8 +285,9 @@ class StrongInstanceDict(IdentityMap):
 
     def contains_state(self, state):
         return (
-            state.key in self and
-            attributes.instance_state(self[state.key]) is state)
+            state.key in self
+            and attributes.instance_state(self[state.key]) is state
+        )
 
     def replace(self, state):
         if state.key in self._dict:
@@ -303,8 +307,9 @@ class StrongInstanceDict(IdentityMap):
                 raise sa_exc.InvalidRequestError(
                     "Can't attach instance "
                     "%s; another instance with key %s is already "
-                    "present in this session." % (
-                        orm_util.state_str(state), state.key))
+                    "present in this session."
+                    % (orm_util.state_str(state), state.key)
+                )
             return False
         else:
             self._dict[state.key] = state.obj()

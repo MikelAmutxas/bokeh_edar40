@@ -1,5 +1,5 @@
 # ext/index.py
-# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2019 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -174,10 +174,6 @@ data structure does not exist, and a set operation is called:
   rules.
 
 
-
-
-
-
 Subclassing
 ===========
 
@@ -214,7 +210,7 @@ version of :class:`.postgresql.JSON`::
 
 The ``age`` attribute at the instance level works as before; however
 when rendering SQL, PostgreSQL's ``->>`` operator will be used
-for indexed access, instead of the usual index opearator of ``->``::
+for indexed access, instead of the usual index operator of ``->``::
 
     >>> query = session.query(Person).filter(Person.age < 20)
 
@@ -224,15 +220,15 @@ The above query will render::
     FROM person
     WHERE CAST(person.data ->> %(data_1)s AS INTEGER) < %(param_1)s
 
-"""
+"""  # noqa
 from __future__ import absolute_import
 
 from sqlalchemy import inspect
-from ..orm.attributes import flag_modified
 from ..ext.hybrid import hybrid_property
+from ..orm.attributes import flag_modified
 
 
-__all__ = ['index_property']
+__all__ = ["index_property"]
 
 
 class index_property(hybrid_property):  # noqa
@@ -251,8 +247,14 @@ class index_property(hybrid_property):  # noqa
     _NO_DEFAULT_ARGUMENT = object()
 
     def __init__(
-            self, attr_name, index, default=_NO_DEFAULT_ARGUMENT,
-            datatype=None, mutable=True, onebased=True):
+        self,
+        attr_name,
+        index,
+        default=_NO_DEFAULT_ARGUMENT,
+        datatype=None,
+        mutable=True,
+        onebased=True,
+    ):
         """Create a new :class:`.index_property`.
 
         :param attr_name:
