@@ -234,7 +234,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 	Parameters:
 		df (Dataframe): Dataframe de datos
 		group_value_name (string): Nombre de columna donde buscar los valores a agrupar
-		goup_value (string): Valor para agrupar los datos
+		group_value (string): Valor para agrupar los datos
 	
 	Returns:
 		ColumnDataSource: ColumnDataSource con los datos correctamente agrupados

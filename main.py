@@ -1,13 +1,8 @@
 from flask import Flask, render_template, session, redirect, url_for, request, flash
-
 import logging
-
 from bokeh_edar40.server import *
-
 from bokeh.embed import server_document
-
 from threading import Thread
-
 import pam
 from subprocess import Popen
 
@@ -41,21 +36,21 @@ if __name__ != '__main__':
 #y por lo tanto realiza la autenticación mediante Kerberos cuando es necesario.
 user_principal_mapping = {'ibermatica': 'bokeh-epele', 'rapidminer': 'bokeh-cartuja'}
 
-def do_kerberos_kinit(username):
-	kinit = '/usr/bin/kinit'
-	kinitopt = '-kt'
-	#Para pruebas en local
-	#keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
-	keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
-	principal = str(username)
-	realm = 'EDAR40.EUS'
-	kinit_args = [ kinit, kinitopt, keytab, principal ]
-	kinit = Popen(kinit_args)
+# def do_kerberos_kinit(username):
+# 	kinit = '/usr/bin/kinit'
+# 	kinitopt = '-kt'
+# 	#Para pruebas en local
+# 	#keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
+# 	keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
+# 	principal = str(username)
+# 	realm = 'EDAR40.EUS'
+# 	kinit_args = [ kinit, kinitopt, keytab, principal ]
+# 	kinit = Popen(kinit_args)
 
-def do_kerberos_kdestroy():
-	kdestroy = '/usr/bin/kdestroy'
-	kdestroy_args = [ kdestroy ]
-	kdestroy = Popen(kdestroy_args)
+# def do_kerberos_kdestroy():
+# 	kdestroy = '/usr/bin/kdestroy'
+# 	kdestroy_args = [ kdestroy ]
+# 	kdestroy = Popen(kdestroy_args)
 
 Thread(target=bk_worker).start()
 
@@ -66,10 +61,10 @@ def cartuja_prediction():
 	return render_template('cartuja.html', script=script)
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/epele', methods=['GET'])
-def epele():
-	script = server_document('http://localhost:9090/epele')
-	return render_template('epele.html', script=script)
+# @app.route('/epele', methods=['GET'])
+# def epele():
+# 	script = server_document('http://localhost:9090/epele')
+# 	return render_template('epele.html', script=script)
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja', methods=['GET'])
@@ -90,7 +85,7 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	if request.method == 'POST':
-		p = pam.pam()
+		# p = pam.pam()
 		username = request.form['username']
 		password = request.form['password']
 
