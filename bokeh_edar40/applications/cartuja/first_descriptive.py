@@ -231,6 +231,7 @@ def create_treemap(df):
 
 def create_data_source_from_dataframe(df, group_value_name, group_value):
 	"""Crea ColumnDataSource desde DataFrame agrupando los valores de una columna concreta según un valor
+	
 	Parameters:
 		df (Dataframe): Dataframe de datos
 		group_value_name (string): Nombre de columna donde buscar los valores a agrupar
@@ -247,6 +248,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 
 def create_normalize_plot(df):
 	"""Crea gráfica de variables afectando en cada tipo de calidad de agua con valores normalizados
+	
 	Parameters:
 		df (Dataframe): Dataframe con los datos a mostrar en la visualización
 
@@ -283,6 +285,7 @@ def create_normalize_plot(df):
 
 def create_not_normalize_plot(df):
 	"""Crea tabla de variables afectando en cada tipo de calidad de agua con valores sin normalizar
+	
 	Parameters:
 		df (Dataframe): Dataframe con los datos a mostrar en la visualización
 
@@ -304,6 +307,7 @@ def create_not_normalize_plot(df):
 
 def create_weight_plot(df):
 	"""Crea gráfico de importancia de variables sobre calidad del agua
+	
 	Parameters:
 		df (Dataframe): Dataframe con los datos a mostrar en la visualización
 
