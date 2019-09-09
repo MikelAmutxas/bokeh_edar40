@@ -234,7 +234,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 	Parameters:
 		df (Dataframe): Dataframe de datos
 		group_value_name (string): Nombre de columna donde buscar los valores a agrupar
-		group_value (string): Valor para agrupar los datos
+		goup_value (string): Valor para agrupar los datos
 	
 	Returns:
 		ColumnDataSource: ColumnDataSource con los datos correctamente agrupados
@@ -354,7 +354,8 @@ def modify_first_descriptive(doc):
 
 	desc = create_description()
 
-	xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
+	#xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
+	xml_document = call_webservice('http://cpu00305:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
 	xml_root = et.fromstring(xml_document)
 
 	normalize_xml = xml_root[0]
