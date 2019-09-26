@@ -377,9 +377,9 @@ def modify_second_descriptive(doc):
 	desc = create_description()
 
 	# xml_perfil_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')
-	xml_perfil_document = call_webservice('http://CPU00305:8888/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
+	xml_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
 	# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
-	xml_prediction_document = call_webservice('http://CPU00305:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
+	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
 
 	xml_perfil_root = et.fromstring(xml_perfil_document)
 	xml_prediction_root = et.fromstring(xml_prediction_document)
@@ -435,7 +435,7 @@ def modify_second_descriptive(doc):
 			model_discretise = model_objective
 
 		# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})
-		xml_prediction_document = call_webservice('http://CPU00305:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})		
+		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})		
 		xml_prediction_root = et.fromstring(xml_prediction_document)
 		
 		# Obtener datos

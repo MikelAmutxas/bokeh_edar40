@@ -359,7 +359,7 @@ def modify_first_descriptive(doc):
 	desc = create_description()
 
 	#xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
-	xml_document = call_webservice('http://cpu00305:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
+	xml_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
 	xml_root = et.fromstring(xml_document)
 
 	normalize_xml = xml_root[0]

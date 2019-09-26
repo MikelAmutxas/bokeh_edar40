@@ -62,13 +62,15 @@ Thread(target=bk_worker).start()
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja/prediccion', methods=['GET'])
 def cartuja_prediction():
-	script = server_document('http://localhost:9090/cartuja/prediccion')
+	# script = server_document('http://localhost:9090/cartuja/prediccion')
+	script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
 	return render_template('cartuja.html', script=script)
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja', methods=['GET'])
 def cartuja():
-	script = server_document('http://localhost:9090/cartuja')
+	# script = server_document('http://localhost:9090/cartuja')
+	script = server_document('http://10.0.20.30:9090/cartuja')	
 	return render_template('cartuja.html', script=script)
 
 @app.route('/', methods=['GET'])
@@ -105,4 +107,4 @@ def logout():
 #Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
-	app.run(port=9995, debug=True, host='localhost')
+	app.run(port=9995, debug=False, host='0.0.0.0')
