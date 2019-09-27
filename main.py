@@ -62,19 +62,24 @@ Thread(target=bk_worker).start()
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja/prediccion', methods=['GET'])
 def cartuja_prediction():
+	active_page = 'prediccion'
 	# script = server_document('http://localhost:9090/cartuja/prediccion')
 	script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
-	return render_template('cartuja.html', script=script)
+	# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
+	return render_template('cartuja.html', script=script, active_page=active_page)
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja', methods=['GET'])
 def cartuja():
+	active_page = 'perfil'
 	# script = server_document('http://localhost:9090/cartuja')
-	script = server_document('http://10.0.20.30:9090/cartuja')	
-	return render_template('cartuja.html', script=script)
+	script = server_document('http://10.0.20.30:9090/cartuja')
+	# script = server_document(url=r'/cartuja', relative_urls=True)	
+	return render_template('cartuja.html', script=script, active_page=active_page)
 
 @app.route('/', methods=['GET'])
 def index():
+	active_page = 'perfil'
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
@@ -83,20 +88,21 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+	active_page = 'login'
 	if request.method == 'POST':
 		# p = pam.pam()
 		username = request.form['username']
 		password = request.form['password']
 
 		# if p.authenticate(str(username), str(password)) and user_principal_mapping[str(username)] is not None:
-		if str(username) == 'rapidminer' and str(password) == 'rapidminer':
+		if str(username) == def_user and str(password) == def_pass:
 			session['username'] = request.form['username']
 			# do_kerberos_kinit(user_principal_mapping[str(username)])
 			return redirect(url_for('index'))
 		else:
 			flash('Login incorrecto, inténtalo otra vez')
 
-	return render_template('login.html')
+	return render_template('login.html', active_page=active_page)
 
 @app.route('/logout', methods=['GET'])
 def logout():
@@ -107,4 +113,7 @@ def logout():
 #Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
+	def_user = 'rapidminer'
+	def_pass = 'rapidminer'
+	active_page = 'perfil'
 	app.run(port=9995, debug=False, host='0.0.0.0')

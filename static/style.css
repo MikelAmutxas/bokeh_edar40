@@ -13,3 +13,26 @@ p {
 .display-3 {
     text-align: center;
 }
+
+.bg-blue {
+    background-color: #3576be;
+}
+
+.navbar-brand span {
+	font-size:2rem;
+	line-height:1.2;
+	font-weight: 400;
+	display:inline-block;
+	vertical-align:middle;
+	padding:0 0 0 10px;
+}
+
+.site-header .navbar-nav .nav-link {
+    color: #cbd5db;
+    /* color: gray; */
+}
+  
+.site-header .navbar-nav .nav-link:hover {
+    color: #ffffff;
+    color: red;
+}
