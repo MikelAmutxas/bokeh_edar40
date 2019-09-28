@@ -366,10 +366,18 @@ def create_description():
 	Returns:
 		Div: Panel de descripción del dashboard
 	"""
-	desc = Div(text="""
-	<h1 class="display-4">Monitorización planta EDAR Cartuja</h1>
-	<p class="lead">Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja.</p>
-	""")
+	desc = Div(text='''
+	<div class="row">
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+			</div>
+			<div class="card-body">
+				Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR
+			</div>
+		</div>
+	</div>
+	''')
 	return desc
 
 def modify_second_descriptive(doc):

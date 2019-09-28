@@ -15,13 +15,14 @@
 		crossorigin="anonymous"></script>
 	<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
 	<title>EDAR 4.0</title>
 </head>
 
 <body>
 	<header>
-		<nav class="navbar navbar-expand-md navbar-dark bg-blue">
-			<a class="navbar-brand" href="/"><img src="{{ url_for('static', filename='icon-192.png') }}", class="img-responsive logo", height="40px", alt="EDAR 4.0"><span>EDAR 4.0</span></a>
+		<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4 shadow">
+			<a class="navbar-brand" href="/"><img src="{{ url_for('static', filename='icon-192.png') }}", class="img-responsive logo", height="35px", alt="EDAR 4.0"><span>EDAR 4.0</span></a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
 				aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
@@ -41,14 +42,25 @@
 				</ul>
 				<ul class="navbar-nav">
 					{% if session['username'] %}
-					<li class="nav-item">
-						<a class="nav-link" href="#"> {{ session['username'] }}</a>
-					</li>
-					<li class="nav-item">
+					<!-- <li class="nav-item disabled active">
+						<a class="nav-link">{{ session['username'] }}</a>
+					</li> -->
+					<!-- <li class="nav-item">
+						<li class="nav-item disabled active">
+							<a class="nav-link">{{ session['username'] }}</a>
+						</li><br>
 						<a class="nav-link" href="{{ url_for('logout') }}">(Cerrar sesión)</a>
+					</li> -->
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-4" data-toggle="dropdown" aria-haspopup="true"
+							aria-expanded="false">
+							<i class="fas fa-user"></i> {{ session['username'] }} </a>
+						<div class="dropdown-menu dropdown-menu-right dropdown-info" aria-labelledby="navbarDropdownMenuLink-4">
+							<a class="dropdown-item" href="{{ url_for('logout') }}">Cerrar sesión</a>
+						</div>
 					</li>
 					{% else %}
-					<li class="nav-item">
+					<li class="nav-item {% if active_page == 'login' %}active{% endif %}">
 						<a class="nav-link" href="{{ url_for('login') }}">Iniciar sesión</a>
 					</li>
 					{% endif %}
@@ -57,7 +69,12 @@
 		</nav>
 	</header>
 	<section class="content">
-		{% block content %}{% endblock %}
+		<div class="container-fluid">
+			<div class="d-sm-flex align-items-center justify-content-between mb-4">
+				<h1 class='h3 mb-0 text-gray-800'>Dashboard Cartuja</h1>
+			</div>
+			{% block content %}{% endblock %}
+		</div>
 	</section>
 </body>
 

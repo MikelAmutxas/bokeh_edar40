@@ -63,20 +63,28 @@ Thread(target=bk_worker).start()
 @app.route('/cartuja/prediccion', methods=['GET'])
 def cartuja_prediction():
 	active_page = 'prediccion'
-	# script = server_document('http://localhost:9090/cartuja/prediccion')
-	script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
-	# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
-	return render_template('cartuja.html', script=script, active_page=active_page)
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
+			# script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
+			return render_template('cartuja.html', script=script, active_page=active_page)
+	return redirect(url_for('login'))
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
 @app.route('/cartuja', methods=['GET'])
 def cartuja():
 	active_page = 'perfil'
-	# script = server_document('http://localhost:9090/cartuja')
-	script = server_document('http://10.0.20.30:9090/cartuja')
-	# script = server_document(url=r'/cartuja', relative_urls=True)	
-	return render_template('cartuja.html', script=script, active_page=active_page)
-
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			script = server_document('http://192.168.10.130:9090/cartuja')
+			# script = server_document('http://10.0.20.30:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)	
+			return render_template('cartuja.html', script=script, active_page=active_page)
+	return redirect(url_for('login'))
+		
 @app.route('/', methods=['GET'])
 def index():
 	active_page = 'perfil'
@@ -94,14 +102,11 @@ def login():
 		username = request.form['username']
 		password = request.form['password']
 
-		# if p.authenticate(str(username), str(password)) and user_principal_mapping[str(username)] is not None:
 		if str(username) == def_user and str(password) == def_pass:
 			session['username'] = request.form['username']
-			# do_kerberos_kinit(user_principal_mapping[str(username)])
 			return redirect(url_for('index'))
 		else:
 			flash('Login incorrecto, inténtalo otra vez')
-
 	return render_template('login.html', active_page=active_page)
 
 @app.route('/logout', methods=['GET'])
