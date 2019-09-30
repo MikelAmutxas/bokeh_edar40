@@ -247,6 +247,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 
 
 def create_normalize_plot(df):
+	import numpy as np
 	"""Crea gráfica de variables afectando en cada tipo de calidad de agua con valores normalizados
 	
 	Parameters:
@@ -271,6 +272,9 @@ def create_normalize_plot(df):
 	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_2, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[2], legend='Cluster 2')
 	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_3, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[3], legend='Cluster 3')
 
+	normalize_plot.xaxis.major_label_orientation = np.pi/2
+	normalize_plot.xaxis.axis_label = 'Indicador (promedio)'
+
 	normalize_plot.y_range.start = -2
 	normalize_plot.y_range.end = 3
 	normalize_plot.legend.location = 'top_left'
@@ -292,13 +296,13 @@ def create_not_normalize_plot(df):
 	Returns:
 		DataTable: Tabla de variables afectando en cada tipo de calidad de agua con valores sin normalizar
 	"""
-
-	source = ColumnDataSource(df)
-
+	units = 4*["tuni1","tuni2","tuni3","tuni4","tuni5","tuni6","tuni7","tuni8","tuni9","tuni10"]
+	source = ColumnDataSource(df.assign(Units=units))
 	columns = [
 		TableColumn(field='cluster', title='Cluster', width=100),
 		TableColumn(field='Indicador', title='Indicador', width=200),
-		TableColumn(field='valor', title='Valor', width=100),
+		TableColumn(field='valor', title='Valor', width=80),
+		TableColumn(field='Units', title='Unidad', width=50)
 	]
 
 	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=376)
@@ -338,7 +342,7 @@ def create_description():
 	"""
 
 	desc = Div(text='''
-	<div class="row">
+	<!--<div class="row">
 		<div class="card mb-4">
 			<div class="card-header">
 				<h6 class="m-0 font-weight-bold text-dark">Información General</h6>
@@ -347,7 +351,7 @@ def create_description():
 				Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR
 			</div>
 		</div>
-	</div>
+	</div>-->
 	''')
 	return desc
 
@@ -375,6 +379,9 @@ def modify_first_descriptive(doc):
 	weight_xml = xml_root[2]
 	
 	normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
+	
+	normalize_df["Indicador"] = normalize_df["Indicador"].astype("str")
+	normalize_df.Indicador.replace('(','podio',inplace=True)
 	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
 	weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
 	
