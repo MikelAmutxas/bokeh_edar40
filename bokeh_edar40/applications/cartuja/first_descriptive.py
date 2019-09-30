@@ -380,8 +380,10 @@ def modify_first_descriptive(doc):
 	
 	normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
 	
-	normalize_df["Indicador"] = normalize_df["Indicador"].astype("str")
-	normalize_df.Indicador.replace('(','podio',inplace=True)
+	normalize_df['Indicador'] = normalize_df['Indicador'].astype(str)
+	# normalize_df["Indicador"].replace('average','HOLY',inplace=True)
+	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')
+	print(normalize_df['Indicador'].head())
 	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
 	weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
 	
