@@ -243,7 +243,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 	"""
 
 	df = df.loc[df[group_value_name].isin([group_value])]
-	print(df.head())
+	df['valor'] = df['valor'].astype('float')
 	source = ColumnDataSource(df)
 	return source
 
@@ -266,6 +266,7 @@ def create_normalize_plot(df):
 	source_cluster = []
 	for i in range(NUM_CLUSTERS):
 		source_cluster.append(create_data_source_from_dataframe(df, 'cluster', f'cluster_{i}'))
+		print(source_cluster[i].data)
 
 	TOOLTIPS = [
 		('Indicador', '@Indicador'),
@@ -275,7 +276,8 @@ def create_normalize_plot(df):
 	normalize_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=FactorRange(factors=source_cluster[0].data['Indicador']), tooltips=TOOLTIPS)
 	for i in range(NUM_CLUSTERS):
 		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend=f'Cluster {i}')
-		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], fill_color=bokeh_utils.LINE_COLORS_PALETTE[i])
+		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], size=8, line_color=bokeh_utils.LINE_COLORS_PALETTE[i],fill_color='white', legend=f'Cluster {i}')
+
 
 	normalize_plot.xaxis.major_label_orientation = np.pi/4
 	normalize_plot.xaxis.axis_label = 'Indicador (promedio)'
