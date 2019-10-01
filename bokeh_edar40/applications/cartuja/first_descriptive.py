@@ -338,7 +338,7 @@ def create_description():
 	"""
 
 	desc = Div(text='''
-	<div class="row">
+	<!--<div class="row">
 		<div class="card mb-4">
 			<div class="card-header">
 				<h6 class="m-0 font-weight-bold text-dark">Información General</h6>
@@ -347,7 +347,8 @@ def create_description():
 				Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR
 			</div>
 		</div>
-	</div>
+		<h3>Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR</h3>
+	</div>-->
 	''')
 	return desc
 
