@@ -223,7 +223,8 @@ def create_treemap(df):
 	treemap_figure.text(rect_text['x'], rect_text['y'], text=rect_text['text'], text_font_size={'value': '11pt'})
 	treemap_figure.text(new_rects_text['x'], new_rects_text['y'], text=new_rects_text['text'], text_font_size={'value': '11pt'})
 
-	treemap_figure.title.text = 'Indicadores normalizados en representación rectangular influentes en la calidad del agua'
+	treemap_figure.title.text = 'Mapa de arbol de indicadores influentes en calidad del agua'
+	treemap_figure.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	treemap_figure.title.align = 'left'
 	treemap_figure.title.text_font_size = '16px'
 
@@ -242,12 +243,14 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 	"""
 
 	df = df.loc[df[group_value_name].isin([group_value])]
+	print(df.head())
 	source = ColumnDataSource(df)
 	return source
 
 
 def create_normalize_plot(df):
 	import numpy as np
+	NUM_CLUSTERS = 4	# 4 clusters
 	"""Crea gráfica de variables afectando en cada tipo de calidad de agua con valores normalizados
 	
 	Parameters:
@@ -256,34 +259,44 @@ def create_normalize_plot(df):
 	Returns:
 		Figure: Gráfica de variables afectando en cada tipo de calidad de agua con valores normalizados
 	"""
-	source_cluster_0 = create_data_source_from_dataframe(df, 'cluster', 'cluster_0')
-	source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
-	source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
-	source_cluster_3 = create_data_source_from_dataframe(df, 'cluster', 'cluster_3')
+	# source_cluster_0 = create_data_source_from_dataframe(df, 'cluster', 'cluster_0')
+	# source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
+	# source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
+	# source_cluster_3 = create_data_source_from_dataframe(df, 'cluster', 'cluster_3')
+	source_cluster = []
+	for i in range(NUM_CLUSTERS):
+		source_cluster.append(create_data_source_from_dataframe(df, 'cluster', f'cluster_{i}'))
 
 	TOOLTIPS = [
 		('Indicador', '@Indicador'),
-		('Valor', '@valor'),
+		('Valor', '@valor')
 	]
 
-	normalize_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=FactorRange(factors=source_cluster_0.data['Indicador']), tooltips=TOOLTIPS)
-	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_0, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[0], legend='Cluster 0')
-	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_1, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[1], legend='Cluster 1')
-	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_2, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[2], legend='Cluster 2')
-	normalize_plot.line(x='Indicador', y='valor', source=source_cluster_3, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[3], legend='Cluster 3')
+	normalize_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=FactorRange(factors=source_cluster[0].data['Indicador']), tooltips=TOOLTIPS)
+	for i in range(NUM_CLUSTERS):
+		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend=f'Cluster {i}')
+		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], fill_color=bokeh_utils.LINE_COLORS_PALETTE[i])
 
-	normalize_plot.xaxis.major_label_orientation = np.pi/2
+	normalize_plot.xaxis.major_label_orientation = np.pi/4
 	normalize_plot.xaxis.axis_label = 'Indicador (promedio)'
+	normalize_plot.xaxis.axis_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	normalize_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
+	normalize_plot.yaxis.axis_label = 'Valor (normalizado)'
+	normalize_plot.yaxis.axis_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	normalize_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	normalize_plot.y_range.start = -2
 	normalize_plot.y_range.end = 3
 	normalize_plot.legend.location = 'top_left'
 	normalize_plot.legend.orientation = 'horizontal'
 	normalize_plot.legend.click_policy = 'hide'
+	normalize_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
-	normalize_plot.title.text = 'Indicadores normalizados influentes en la calidad del agua'
+	normalize_plot.title.text = 'Perfil de la calidad del agua'
+	# normalize_plot.title.text_font = 'helvetica'
+	normalize_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	normalize_plot.title.align = 'left'
-	normalize_plot.title.text_font_size = '16px'
+	normalize_plot.title.text_font_size = '1rem'
 
 	return normalize_plot
 
@@ -299,13 +312,13 @@ def create_not_normalize_plot(df):
 	units = 4*["tuni1","tuni2","tuni3","tuni4","tuni5","tuni6","tuni7","tuni8","tuni9","tuni10"]
 	source = ColumnDataSource(df.assign(Units=units))
 	columns = [
-		TableColumn(field='cluster', title='Cluster', width=100),
-		TableColumn(field='Indicador', title='Indicador', width=200),
-		TableColumn(field='valor', title='Valor', width=80),
-		TableColumn(field='Units', title='Unidad', width=50)
+		TableColumn(field='cluster', title='Cluster', width=20),
+		TableColumn(field='Indicador', title='Indicador (promedio)', width=72),
+		TableColumn(field='valor', title='Valor', width=30),
+		TableColumn(field='Units', title='Unidad', width=30)
 	]
 
-	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=376)
+	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=250)
 
 	return data_table
 
@@ -330,6 +343,7 @@ def create_weight_plot(df):
 	weight_plot.hbar(y='Attribute', left='Weight', right=0, source=source, height=0.6, fill_color=bokeh_utils.BAR_COLORS_PALETTE[0], line_color=bokeh_utils.BAR_COLORS_PALETTE[0])
 
 	weight_plot.title.text = 'Peso de indicadores sobre calidad del agua'
+	weight_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
 	return weight_plot
@@ -363,7 +377,7 @@ def create_table_title():
 		Div: Título de la tabla
 	"""
 
-	title = Div(text='Indicadores sin normalizar influentes en la calidad del agua', style={'font-weight': 'bold', 'font-size': '16px', 'color': '#343a40', 'margin-top': '2px', 'font-family': 'inherit'}, width=470, height=10)
+	title = Div(text='Indicadores sin normalizar influentes en la calidad del agua', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, width=470, height=10)
 	return title
 
 def modify_first_descriptive(doc):
@@ -379,24 +393,31 @@ def modify_first_descriptive(doc):
 	weight_xml = xml_root[2]
 	
 	normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
-	
-	normalize_df['Indicador'] = normalize_df['Indicador'].astype(str)
-	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')
-	print(normalize_df['Indicador'].head())
+	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
+	# print(normalize_df[['valor']].iloc[0:10].T.to_csv(index=False))
+	# print(normalize_df[['valor']].iloc[10:20].T.to_csv(index=False))
+	# print(normalize_df[['valor']].iloc[20:30].T.to_csv(index=False))
+	# print(normalize_df[['valor']].iloc[30:40].T.to_csv(index=False))
+
+
 	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
+	not_normalize_df['Indicador']=not_normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
+
 	weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
 	
 	normalize_plot = create_normalize_plot(normalize_df)
 	treemap_plot = create_treemap(normalize_df)
 	not_normalize_table = create_not_normalize_plot(not_normalize_df)
 	not_normalize_table_title = create_table_title()
-	not_normalize_widget_box = widgetbox([not_normalize_table_title, not_normalize_table], width=470, height=400, sizing_mode='fixed', spacing=3)
+	not_normalize_widget_box = widgetbox([not_normalize_table_title, not_normalize_table], width=470, height=250, sizing_mode='fixed', spacing=3)
+	# not_normalize_widget_box.margin = (0, 0, 0, 80)	# Añadimos margen a la tabla para centrarla mejor (top, bottom, right, left)
 	weight_plot = create_weight_plot(weight_df)
 
 	l = layout([
 		[desc],
 		[normalize_plot, treemap_plot],
-		[not_normalize_widget_box, weight_plot]
+		# [not_normalize_widget_box, weight_plot]
+		[not_normalize_widget_box]
 	], sizing_mode='stretch_both')
 
 	doc.add_root(l)

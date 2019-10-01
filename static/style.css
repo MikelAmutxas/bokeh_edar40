@@ -7,9 +7,18 @@ body {
     background-color: #f8f9fc;
 }
 
+.bg-edar {
+    background-color: #3576be;
+}
+
 .h3 {
     font-weight: 400;
+    /* font-size: 25px; */
     line-height: 1.2;
+}
+
+.h3, h3 {
+    font-size: 1.75rem;
 }
 
 

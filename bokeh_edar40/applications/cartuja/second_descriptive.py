@@ -17,6 +17,7 @@ from bokeh.transform import jitter, factor_cmap, dodge
 
 import xml.etree.ElementTree as et
 import pandas as pd
+import numpy as np
 
 
 def create_data_source_from_dataframe(df, group_value_name, group_value):
@@ -113,11 +114,16 @@ def create_corrects_plot(prediction_values, data_dict):
 	corrects_plot.x_range.range_padding = 0.1
 	corrects_plot.y_range.start = 0
 
+	corrects_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	corrects_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
 	corrects_plot.legend.location = 'top_left'
-	corrects_plot.legend.orientation = 'vertical'
+	corrects_plot.legend.orientation = 'horizontal'
 	corrects_plot.legend.click_policy = 'hide'
+	corrects_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
 	corrects_plot.title.text = 'Gráfica de aciertos'
+	corrects_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	corrects_plot.title.align = 'left'
 	corrects_plot.title.text_font_size = '16px'
 
@@ -140,9 +146,14 @@ def create_attribute_weight_plot(df):
 
 	weight_plot.vbar(x='Attribute', top='Weight', source=source, width=0.9, line_color='white', fill_color='colors')
 
+	weight_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+	weight_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
 	weight_plot.y_range.start = 0
 
 	weight_plot.title.text = 'Importancia de los predictores'
+	weight_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
 
@@ -297,12 +308,18 @@ def create_outlier_plot(df):
 	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_2, color=bokeh_utils.LINE_COLORS_PALETTE[2], size=6, legend='Cluster 2')
 	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_3, color=bokeh_utils.LINE_COLORS_PALETTE[3], size=6, legend='Cluster 3')
 
+	outlier_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	outlier_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
 	outlier_plot.legend.location = 'top_left'
 	outlier_plot.legend.orientation = 'horizontal'
 	outlier_plot.legend.click_policy = 'hide'
+	outlier_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
 	outlier_plot.xaxis[0].formatter = DatetimeTickFormatter(years=['%Y'])
 
 	outlier_plot.title.text = 'Probabilidad de Outliers'
+	outlier_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	outlier_plot.title.align = 'left'
 	outlier_plot.title.text_font_size = '16px'
 	outlier_plot.add_tools(hover_tool)
@@ -346,13 +363,20 @@ def create_prediction_plot(df):
 	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_2, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[2], legend='Cluster 2')
 	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_3, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[3], legend='Cluster 3')
 
+	prediction_plot.xaxis.major_label_orientation = np.pi/4
+	prediction_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+	prediction_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
 	prediction_plot.legend.location = 'top_left'
 	prediction_plot.legend.orientation = 'horizontal'
 	prediction_plot.legend.click_policy = 'hide'
+	prediction_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	prediction_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
 	prediction_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
 
 	prediction_plot.title.text = 'Predicción de los clusters a futuro'
+	prediction_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	prediction_plot.title.align = 'left'
 	prediction_plot.title.text_font_size = '16px'
 	prediction_plot.add_tools(hover_tool)
@@ -367,7 +391,7 @@ def create_description():
 		Div: Panel de descripción del dashboard
 	"""
 	desc = Div(text='''
-	<div class="row">
+	<!--<div class="row">
 		<div class="card mb-4">
 			<div class="card-header">
 				<h6 class="m-0 font-weight-bold text-primary">Información General</h6>
@@ -376,7 +400,7 @@ def create_description():
 				Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR
 			</div>
 		</div>
-	</div>
+	</div>-->
 	''')
 	return desc
 
@@ -409,13 +433,12 @@ def modify_second_descriptive(doc):
 	possible_values.remove('class_precision')
 	correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, 'Calidad_Agua', possible_values)
 
-	
 	prediction_plot = create_prediction_plot(prediction_df)
 	outlier_plot = create_outlier_plot(outlier_df)
 	decision_tree_plot = create_decision_tree_plot()
 	decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 	decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-	decision_tree_menu_title = Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': '#343a40', 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
+	decision_tree_menu_title = Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
 	decision_tree_selection_button, decision_tree_selection_select_menu = create_decision_tree_menu()
 	decision_tree_selection_wb = widgetbox([decision_tree_selection_select_menu , decision_tree_selection_button], width=350, height=100, sizing_mode='fixed')
 	performance_vector_table = create_performance_vector_table(performance_vector_data_dict)
