@@ -266,7 +266,7 @@ def create_normalize_plot(df):
 	source_cluster = []
 	for i in range(NUM_CLUSTERS):
 		source_cluster.append(create_data_source_from_dataframe(df, 'cluster', f'cluster_{i}'))
-		print(source_cluster[i].data)
+		# print(source_cluster[i].data)
 
 	TOOLTIPS = [
 		('Indicador', '@Indicador'),
@@ -396,10 +396,6 @@ def modify_first_descriptive(doc):
 	
 	normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
 	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
-	# print(normalize_df[['valor']].iloc[0:10].T.to_csv(index=False))
-	# print(normalize_df[['valor']].iloc[10:20].T.to_csv(index=False))
-	# print(normalize_df[['valor']].iloc[20:30].T.to_csv(index=False))
-	# print(normalize_df[['valor']].iloc[30:40].T.to_csv(index=False))
 
 
 	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
