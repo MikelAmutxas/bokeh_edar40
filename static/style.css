@@ -2,25 +2,21 @@ a {
     cursor: pointer;
 }
 
+body {
+    color: #858796;
+    background-color: #f8f9fc;
+}
+
+.h3 {
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+
+/* .shadow {
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15)!important;
+} */
+
 .text-gray-800 {
     color: #5a5c69!important;   
 }
-
-.dropdown-toggle:after { content: none }
-
-.h3, h3 {
-    font-size: 1.75rem;
-    font-weight: 400;
-}
-
-/* .container, .container-fluid {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    margin-right: auto;
-    margin-left: auto;
-} */
-
-/* .david {
-    margin-left: auto;
-    padding-left: 15px;
-} */
