@@ -341,7 +341,6 @@ def create_radar_plot(df):
 	y = [v[1] for v in verts] 
 
 	
-
 	text = list(df.Indicador.unique())
 	source = ColumnDataSource({'x':x+ [0.5],'y':y+ [1],'text':text+ ['']})
 	# TOOLTIPS = [
