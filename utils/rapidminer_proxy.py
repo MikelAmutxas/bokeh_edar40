@@ -2,7 +2,10 @@ import pandas as pd
 
 import requests
 
-def call_webservice(url, username, password, parameters=None):
+def call_webservice(url, username, password, parameters=None, out_json=False):
 	r = requests.get(url, params=parameters, auth=(username, password))
-	xml_document = r.text
-	return xml_document
+	if out_json:
+		document = r.json()
+	else:
+		document = r.text
+	return document
