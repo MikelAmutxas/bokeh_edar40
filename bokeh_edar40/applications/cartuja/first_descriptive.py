@@ -1,4 +1,4 @@
-from bokeh_edar40.visualizations.treemap import *
+from bokeh_edar40.visualizations.treemap import normalize_sizes, squarify
 from utils.rapidminer_proxy import call_webservice 
 from utils.xml_parser import get_dataframe_from_xml
 import utils.bokeh_utils as bokeh_utils
@@ -6,7 +6,6 @@ import utils.bokeh_utils as bokeh_utils
 from bokeh.layouts import column, row, widgetbox, grid
 from bokeh.models import ColumnDataSource, Div, DateRangeSlider, DatePicker, Button, DataTable, TableColumn, LabelSet, Span, Label
 from bokeh.models.markers import Circle
-from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc, show
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.tickers import FixedTicker
@@ -136,8 +135,8 @@ def create_treemap(df):
 		    XdX.append(X[i]+dX[i])
 		    YdY.append(Y[i]+dY[i])
 
-		text_Y = [y - 0.06 for y in YdY]
-		text_X = [x + 0.01 for x in X]
+		# text_Y = [y - 0.06 for y in YdY]
+		# text_X = [x + 0.01 for x in X]
 
 		treemap_figure.quad(top=YdY, bottom=Y, left=X, right=XdX, color=total_source.data['Colores'], line_color='black')
 		
@@ -364,7 +363,7 @@ def create_radar_plot(df):
 
 	x = [] # x-vertices
 	y = [] # y-vertices
-	x_var_label = [] # x-vertices for variable labels
+	# x_var_label = [] # x-vertices for variable labels
 	x_ticks = [0.5]*(GRID_STEPS-1) # x-vertices for circular grid ticks
 	y_ticks = [] # y-vertices for circular grid tick
 	text = list(df.Indicador.unique()) # List with variable names
@@ -517,7 +516,7 @@ def create_title(text):
 
 def modify_first_descriptive(doc):
 
-	desc = create_description()
+	# desc = create_description()
 
 	#xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
 	xml_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')

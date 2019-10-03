@@ -2,7 +2,7 @@ from flask import Flask, render_template, session, redirect, url_for, request, f
 
 import logging
 
-from bokeh_edar40.server import *
+from bokeh_edar40.server import bk_worker
 
 from bokeh.embed import server_document
 
@@ -91,7 +91,6 @@ def cartuja():
 		
 @app.route('/', methods=['GET'])
 def index():
-	active_page = 'perfil'
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
