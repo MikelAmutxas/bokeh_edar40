@@ -2,6 +2,21 @@ a {
     cursor: pointer;
 }
 
+.navbar-brand span {
+	font-size:1.2rem;
+	line-height:1.2;
+	/* font-weight: 200; */
+	display:inline-block;    
+    vertical-align:middle;
+	/* padding:0 0 0 15px; */
+}
+.navbar-brand b {
+	display:block;
+    font-size:80%;
+    font-weight: 300;
+	line-height:1;
+}
+
 body {
     color: #858796;
     background-color: #f8f9fc;

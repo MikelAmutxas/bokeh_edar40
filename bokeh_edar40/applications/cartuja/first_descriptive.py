@@ -3,14 +3,16 @@ from utils.rapidminer_proxy import call_webservice
 from utils.xml_parser import get_dataframe_from_xml
 import utils.bokeh_utils as bokeh_utils
 
-from bokeh.layouts import column, row, widgetbox, layout
-from bokeh.models import ColumnDataSource, Div, DateRangeSlider, DatePicker, Button, DataTable, TableColumn
+from bokeh.layouts import column, row, widgetbox, grid
+from bokeh.models import ColumnDataSource, Div, DateRangeSlider, DatePicker, Button, DataTable, TableColumn, LabelSet, Span, Label
 from bokeh.models.markers import Circle
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc, show
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.tickers import FixedTicker
 from bokeh.models.ranges import FactorRange
+from bokeh.models.tools import HoverTool
+from bokeh.models.widgets import Tabs, Panel
 
 import pandas as pd
 import numpy as np
@@ -192,6 +194,8 @@ def create_treemap(df):
 	treemap_figure.axis.visible = False
 	treemap_figure.xgrid.grid_line_color = None
 	treemap_figure.ygrid.grid_line_color = None
+	treemap_figure.x_range.range_padding = 0
+	treemap_figure.y_range.range_padding = 0
 
 	first_level_source = create_first_level_treemap_data(df)
 	# Comenzamos a crear los rectángulos teniendo todo el espacio libre
@@ -224,12 +228,20 @@ def create_treemap(df):
 	treemap_figure.text(rect_text['x'], rect_text['y'], text=rect_text['text'], text_font_size={'value': '11pt'})
 	treemap_figure.text(new_rects_text['x'], new_rects_text['y'], text=new_rects_text['text'], text_font_size={'value': '11pt'})
 
-	treemap_figure.title.text = 'Mapa de arbol de indicadores influentes en calidad del agua'
+	treemap_figure.title.text = 'Mapa de arbol de indicadores influentes'
 	treemap_figure.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	treemap_figure.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	treemap_figure.background_fill_color = bokeh_utils.BACKGROUND_COLOR
 	treemap_figure.title.align = 'left'
 	treemap_figure.title.text_font_size = '16px'
+	treemap_figure.outline_line_color = None
+	treemap_figure.min_border_left = 0
+	treemap_figure.min_border_right = 15
+	treemap_figure.min_border_bottom = 0
+	treemap_figure.min_border_top = 0
+
+
+
 
 	return treemap_figure
 
@@ -276,7 +288,17 @@ def create_normalize_plot(df):
 		('Valor', '@valor')
 	]
 
-	normalize_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=FactorRange(factors=source_cluster[0].data['Indicador']), tooltips=TOOLTIPS)
+	normalize_plot = figure(plot_height=350, toolbar_location=None, sizing_mode='stretch_width',
+							x_range=FactorRange(factors=source_cluster[0].data['Indicador']), tooltips=TOOLTIPS)
+	# Linea horizontal de anotación sobre nivel máximo de 0 a 1
+	hline = Span(location=1, dimension='width', line_color='red', line_alpha=0.6, line_dash='dotted', line_width=2)
+	
+	normalize_plot.add_layout(hline)
+
+	# Etiqueta linea horizontal
+	hlabel = Label(x=8.7, y=1, text='Max', text_color='red', text_alpha=0.6, text_font_size='14px')
+	normalize_plot.add_layout(hlabel)
+
 	for i in range(NUM_CLUSTERS):
 		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend=f'Cluster {i}')
 		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], size=8, line_color=bokeh_utils.LINE_COLORS_PALETTE[i],fill_color='white', legend=f'Cluster {i}')
@@ -296,12 +318,15 @@ def create_normalize_plot(df):
 	normalize_plot.legend.orientation = 'horizontal'
 	normalize_plot.legend.click_policy = 'hide'
 	normalize_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	normalize_plot.legend.background_fill_alpha = 0
 
 	normalize_plot.title.text = 'Perfil de la calidad del agua'
 	# normalize_plot.title.text_font = 'helvetica'
 	normalize_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	normalize_plot.title.align = 'left'
 	normalize_plot.title.text_font_size = '1rem'
+	normalize_plot.title.visible = False
+	normalize_plot.min_border_right = 20
 
 	return normalize_plot
 
@@ -316,87 +341,92 @@ def create_radar_plot(df):
 		Figure: Gráfica de radar afectando en cada tipo de calidad de agua con valores normalizados
 	"""
 
-	def unit_poly_verts(theta):
+	def unit_poly_verts(theta, r=0.5, center=0.5):
 		"""Return vertices of polygon for subplot axes.
-		This polygon is circumscribed by a unit circle centered at (0.5, 0.5)
+		This polygon is circumscribed by a unit circle centered at center(def:(0.5, 0.5))
 		"""
-		x0, y0, r = [0.5] * 3
+		x0, y0 = [center] * 2
 		verts = [(r*np.cos(t) + x0, r*np.sin(t) + y0) for t in theta]
 		return verts
 
-	def radar_patch(r, theta):
-		yt = (r + 0.01) * np.sin(theta) + 0.5
-		xt = (r + 0.01) * np.cos(theta) + 0.5
+	def radar_patch(r, theta, center):
+		yt = (r + 0.01) * np.sin(theta) + center
+		xt = (r + 0.01) * np.cos(theta) + center
 		return xt, yt
 
-	NUM_CLUSTERS = df.cluster.nunique()	# Extraer numero clusters
-	NUM_INDS = df.Indicador.nunique() # Extraer numero de indicadores
+	NUM_VARS = df.Indicador.nunique() # Extraer numero de indicadores
+	CENTER = 0.5 # Centro del gráfico de araña
+	GRID_STEPS = 5 # Grid Subdivisions
 
-	theta = np.linspace(0, 2*np.pi, num_vars, endpoint=False)
+	theta = np.linspace(0, 2*np.pi, NUM_VARS, endpoint=False)
 	# rotate theta such that the first axis is at the top
 	theta += np.pi/2
 
-	verts = unit_poly_verts(theta)
-	x = [v[0] for v in verts] 
-	y = [v[1] for v in verts] 
+	x = [] # x-vertices
+	y = [] # y-vertices
+	x_var_label = [] # x-vertices for variable labels
+	x_ticks = [0.5]*(GRID_STEPS-1) # x-vertices for circular grid ticks
+	y_ticks = [] # y-vertices for circular grid tick
+	text = list(df.Indicador.unique()) # List with variable names
 
-	
-	text = list(df.Indicador.unique())
-	source = ColumnDataSource({'x':x+ [0.5],'y':y+ [1],'text':text+ ['']})
-	# TOOLTIPS = [
-	# 	('Indicador', '@text'),
-	# 	('Valor', '@' + clist)
-	# ]
-	normalize_radar_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width')
+	#Tooltip creation
+	TOOLTIPS = [('Indicador', '@Indicador'),
+				('Valor', '@valor'),
+				('Valor(esc)', '@valor_map')]
+	hover = HoverTool(names=['radar_plt'], tooltips=TOOLTIPS)
 
-	normalize_radar_plot.line(x="x", y="y", source=source, line_color='black')
+	# Create radar figure
+	nor_rad_pl = figure(plot_height=340, toolbar_location=None, x_range=(-0.2,1.4),
+						y_range=(-0.1,1.1), tools=[hover,], sizing_mode='stretch_width')
 
-	labels = LabelSet(x="x",y="y",text="text",source=source)
+	for i in range(GRID_STEPS):
+		verts=unit_poly_verts(theta, (GRID_STEPS-i)*0.5/GRID_STEPS, CENTER)
+		x.append([v[0] for v in verts])
+		y.append([v[1] for v in verts])
+		if i==0:
+			source = ColumnDataSource({'x':x[i]+ [CENTER],'y':y[i]+ [(GRID_STEPS-i)*0.5/GRID_STEPS+CENTER],'text':text+ ['']})
+			# source_test = ColumnDataSource({'x':x_var_label + [CENTER],'y':y[i]+ [(GRID_STEPS-i)*0.5/GRID_STEPS+CENTER],'text':text+ ['']})
+			var_labels = LabelSet(x="x",y="y",text="text",source=source, text_color=bokeh_utils.LABEL_FONT_COLOR, text_font_size='15px') # Position variable labels
+			nor_rad_pl.add_layout(var_labels) # Add variable labels
+			color='black'
+		else:
+			source = ColumnDataSource({'x':x[i]+ [CENTER],'y':y[i]+ [(GRID_STEPS-i)*0.5/GRID_STEPS+CENTER]}) #radius*i/GRID_STEPS+CENTER
+			color='gainsboro'
+		nor_rad_pl.line(x="x", y="y", source=source, line_color=color) # Create poligons
+		y_ticks.append(y[i][0]) # Store y-vertices grid ticks positions
 
-	normalize_radar_plot.add_layout(labels)
+	for i in range(NUM_VARS):
+		nor_rad_pl.line(x=[CENTER,x[0][i]], y=[CENTER,y[0][i]], line_color='gainsboro') # Create grid lines from center to vertix
 
-	clist = []
-	for cluster in df.cluster.unique():
-		clist.append(((df.valor[df['cluster'] == cluster])+2)/5 * 0.5)
+	y_ticks.reverse()
+	text_labels_ticks = np.around(list(np.linspace(0, 1, GRID_STEPS, endpoint=False)), decimals=2) # Create text for grid ticks
+	source_labels_ticks = ColumnDataSource({'x':x_ticks,'y':y_ticks[:-1],'text':text_labels_ticks[1:]})
+	tick_labels = LabelSet(x="x",y="y",text="text",source=source_labels_ticks, text_color=bokeh_utils.LABEL_FONT_COLOR, text_font_size='14px') # Position grid tick labels
+	nor_rad_pl.add_layout(tick_labels) # Add grid tick labels
 
-	for i in range(NUM_CLUSTERS):
-    	xt, yt = radar_patch(clist[i], theta)
-    	normalize_radar_plot.patch(x=xt, y=yt, fill_alpha=0.15, fill_color=bokeh_utils.LINE_COLORS_PALETTE[i], line_color=colors[i], legend=f'Cluster')
+	clist = []	# Cluster data list for spider pl patches
+	colors = bokeh_utils.LINE_COLORS_PALETTE
+	DATA_MIN = -2
+	DATA_MAX = 3
 
+	for i, cluster in enumerate(df.cluster.unique()):
+		clist.append(df[df['cluster'] == cluster])
+		xt, yt = radar_patch((clist[i].valor-DATA_MIN)/(DATA_MAX-DATA_MIN) * 0.5, theta, CENTER)
+		clist[i]=clist[i].assign(**{'xt':xt, 'yt':yt, 'valor_map':(clist[i].valor-DATA_MIN)/(DATA_MAX-DATA_MIN)})
+		nor_rad_pl.patch(x='xt', y='yt', fill_alpha=0.15, fill_color=colors[i], line_color=colors[i], legend=f'Cluster {i}', source=ColumnDataSource(clist[i]))
+		nor_rad_pl.circle(x='xt', y='yt', size=15, fill_color=None, line_color=None ,source=ColumnDataSource(clist[i]), name='radar_plt')
 
-	
-	normalize_radar_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	normalize_radar_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	normalize_radar_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-
-	normalize_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=FactorRange(factors=source_cluster[0].data['Indicador']), tooltips=TOOLTIPS)
-	for i in range(NUM_CLUSTERS):
-		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend=f'Cluster {i}')
-		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], size=8, line_color=bokeh_utils.LINE_COLORS_PALETTE[i],fill_color='white', legend=f'Cluster {i}')
-
-	normalize_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	normalize_plot.xaxis.major_label_orientation = np.pi/4
-	normalize_plot.xaxis.axis_label = 'Indicador (promedio)'
-	normalize_plot.xaxis.axis_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	normalize_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-
-	normalize_plot.yaxis.axis_label = 'Valor (normalizado)'
-	normalize_plot.yaxis.axis_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	normalize_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	normalize_plot.y_range.start = -2
-	normalize_plot.y_range.end = 3
-	normalize_plot.legend.location = 'top_left'
-	normalize_plot.legend.orientation = 'horizontal'
-	normalize_plot.legend.click_policy = 'hide'
-	normalize_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
-
-	normalize_plot.title.text = 'Perfil de la calidad del agua'
-	# normalize_plot.title.text_font = 'helvetica'
-	normalize_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
-	normalize_plot.title.align = 'left'
-	normalize_plot.title.text_font_size = '1rem'
-
-	return normalize_plot
+	nor_rad_pl.legend.location = 'bottom_left'
+	nor_rad_pl.legend.orientation = 'vertical'
+	nor_rad_pl.legend.click_policy = 'hide'
+	nor_rad_pl.legend.background_fill_alpha = 0
+	nor_rad_pl.xgrid.visible = False
+	nor_rad_pl.ygrid.visible = False
+	nor_rad_pl.xaxis.visible = False
+	nor_rad_pl.yaxis.visible = False
+	nor_rad_pl.min_border = 0
+	nor_rad_pl.outline_line_color = None
+	return nor_rad_pl
 
 
 def create_not_normalize_plot(df):
@@ -417,7 +447,7 @@ def create_not_normalize_plot(df):
 		TableColumn(field='Units', title='Unidad', width=30)
 	]
 
-	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=250)
+	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=370)
 
 	return data_table
 
@@ -441,10 +471,16 @@ def create_weight_plot(df):
 	weight_plot = figure(height=400, toolbar_location=None, sizing_mode='stretch_width',y_range=FactorRange(factors=source.data['Attribute']), x_range=(0,1), tooltips=TOOLTIPS)
 	weight_plot.hbar(y='Attribute', left='Weight', right=0, source=source, height=0.6, fill_color=bokeh_utils.BAR_COLORS_PALETTE[0], line_color=bokeh_utils.BAR_COLORS_PALETTE[0])
 
-	weight_plot.title.text = 'Peso de indicadores sobre calidad del agua'
+	weight_plot.title.text = 'Peso de indicadores influentes'
 	weight_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
+	weight_plot.title.offset = -100
+	weight_plot.min_border_right = 15
+	weight_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	weight_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+
 	return weight_plot
 
 def create_description():
@@ -468,7 +504,7 @@ def create_description():
 	''')
 	return desc
 
-def create_table_title():
+def create_title(text):
 	"""Crea tiítulo en forma de Div para la tabla de variables afectando en cada tipo de calidad de agua con valores sin normalizar, ya que,
 	las tablas de Bokeh no disponen de la opción de insertar un título por defecto
 
@@ -476,7 +512,7 @@ def create_table_title():
 		Div: Título de la tabla
 	"""
 
-	title = Div(text='Indicadores sin normalizar influentes en la calidad del agua', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, width=470, height=10)
+	title = Div(text=text, style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-bottom': '2px', 'font-family': 'inherit'}, width=470, height=16)
 	return title
 
 def modify_first_descriptive(doc):
@@ -497,24 +533,30 @@ def modify_first_descriptive(doc):
 
 	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
 	not_normalize_df['Indicador']=not_normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
-	not_normalize_df.valor = normalize_df.valor.astype('float')	# Correct column data types
+	not_normalize_df.valor = not_normalize_df.valor.astype('float')	# Correct column data types
 
 	weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
 	
 	normalize_plot = create_normalize_plot(normalize_df)
-	# normalize_radar_plot = create_radar_plot(normalize_df)
+	nor_rad_pl = create_radar_plot(normalize_df)
+
+	# Creacion del panel
+	l_panel = Panel(child=nor_rad_pl, title='Diagrama de araña')
+	r_panel = Panel(child=normalize_plot, title='Diagrama de linea')
+	profile_tabs = Tabs(tabs=[l_panel, r_panel], height = 400, sizing_mode="stretch_both", max_width=650, margin=[0,10,0,0])
+	profile_title = create_title('Perfil de calidad del agua (normalizado)')
+	profile_widget_box = widgetbox([profile_title, profile_tabs], width=470, height=400, sizing_mode='stretch_width', spacing=3)
 	treemap_plot = create_treemap(normalize_df)
+	not_normalize_table_title = create_title('Indicadores influentes sin normalizar')
 	not_normalize_table = create_not_normalize_plot(not_normalize_df)
-	not_normalize_table_title = create_table_title()
 	not_normalize_widget_box = widgetbox([not_normalize_table_title, not_normalize_table], width=470, height=250, sizing_mode='fixed', spacing=3)
 	# not_normalize_widget_box.margin = (0, 0, 0, 80)	# Añadimos margen a la tabla para centrarla mejor (top, bottom, right, left)
 	weight_plot = create_weight_plot(weight_df)
 
-	l = layout([
-		[desc],
-		[normalize_plot, treemap_plot],
-		[not_normalize_widget_box, weight_plot]
-		# [not_normalize_widget_box]
-	], sizing_mode='stretch_both')
+	l = grid([
+		# [desc],
+		[profile_widget_box, treemap_plot],
+		[not_normalize_widget_box, column(weight_plot)]],
+		sizing_mode='stretch_both')
 
 	doc.add_root(l)
