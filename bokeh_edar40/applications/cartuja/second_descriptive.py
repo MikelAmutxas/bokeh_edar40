@@ -126,6 +126,8 @@ def create_corrects_plot(prediction_values, data_dict):
 	corrects_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	corrects_plot.title.align = 'left'
 	corrects_plot.title.text_font_size = '16px'
+	corrects_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+
 
 	return corrects_plot
 
@@ -156,6 +158,8 @@ def create_attribute_weight_plot(df):
 	weight_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
+	weight_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+
 
 	return weight_plot
 
@@ -255,7 +259,6 @@ def append_labels_to_decision_tree(plot, graph, tree):
 
 	middle_x, middle_y, middle_text = tree.get_line_text_positions()
 	plot.text(middle_x, middle_y, text=middle_text, text_font_size={'value': '11pt'}, text_align='center')
-
 	return plot
 
 
@@ -270,6 +273,9 @@ def create_decision_tree_plot():
 	plot.axis.visible = False
 	plot.xgrid.grid_line_color = None
 	plot.ygrid.grid_line_color = None
+	plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR	
+	plot.background_fill_color = bokeh_utils.BACKGROUND_COLOR
+	plot.outline_line_color = None
 
 	return plot
 
@@ -322,6 +328,7 @@ def create_outlier_plot(df):
 	outlier_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	outlier_plot.title.align = 'left'
 	outlier_plot.title.text_font_size = '16px'
+	outlier_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	outlier_plot.add_tools(hover_tool)
 
 	return outlier_plot
@@ -379,6 +386,7 @@ def create_prediction_plot(df):
 	prediction_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	prediction_plot.title.align = 'left'
 	prediction_plot.title.text_font_size = '16px'
+	prediction_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	prediction_plot.add_tools(hover_tool)
 
 
@@ -446,7 +454,7 @@ def modify_second_descriptive(doc):
 	corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
 
 	l = layout([
-		[desc],
+		# [desc],
 		[prediction_plot],
 		[outlier_plot],
 		[decision_tree_menu_title],

@@ -318,6 +318,8 @@ def create_normalize_plot(df):
 	normalize_plot.legend.click_policy = 'hide'
 	normalize_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	normalize_plot.legend.background_fill_alpha = 0
+	normalize_plot.legend.border_line_alpha = 0
+
 
 	normalize_plot.title.text = 'Perfil de la calidad del agua'
 	# normalize_plot.title.text_font = 'helvetica'
@@ -419,12 +421,15 @@ def create_radar_plot(df):
 	nor_rad_pl.legend.orientation = 'vertical'
 	nor_rad_pl.legend.click_policy = 'hide'
 	nor_rad_pl.legend.background_fill_alpha = 0
+	nor_rad_pl.legend.border_line_alpha = 0
 	nor_rad_pl.xgrid.visible = False
 	nor_rad_pl.ygrid.visible = False
 	nor_rad_pl.xaxis.visible = False
 	nor_rad_pl.yaxis.visible = False
 	nor_rad_pl.min_border = 0
 	nor_rad_pl.outline_line_color = None
+	nor_rad_pl.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+	nor_rad_pl.background_fill_color = bokeh_utils.BACKGROUND_COLOR
 	return nor_rad_pl
 
 
@@ -478,7 +483,7 @@ def create_weight_plot(df):
 	weight_plot.min_border_right = 15
 	weight_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	weight_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-
+	weight_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 
 	return weight_plot
 

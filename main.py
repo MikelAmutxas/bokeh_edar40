@@ -35,28 +35,6 @@ if __name__ != '__main__':
 	app.logger.addHandler(tornado_application_logger.handlers)
 	app.logger.setLevel(logging.INFO)
 
-#Usamos este diccionario para mapear los usuarios diponibles a los principales de kerberos. Tenemos dos principales, uno para cada caso de uso
-#si accedemos al caso de uso de EDAR Epele, accedemos mediante el principal bokeh-epele y si accedemos al caso de uso EDAR La Cartuja accedemos con el principal
-#bokeh-cartuja. En el caso de uso de La Cartuja no sería necesario ingresar mediante Kerberos, ya que, el propio software RapidMiner ya está configurado con esta opción 
-#y por lo tanto realiza la autenticación mediante Kerberos cuando es necesario.
-# user_principal_mapping = {'ibermatica': 'bokeh-epele', 'rapidminer': 'bokeh-cartuja'}
-
-# def do_kerberos_kinit(username):
-# 	kinit = '/usr/bin/kinit'
-# 	kinitopt = '-kt'
-# 	#Para pruebas en local
-# 	#keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
-# 	keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
-# 	principal = str(username)
-# 	realm = 'EDAR40.EUS'
-# 	kinit_args = [ kinit, kinitopt, keytab, principal ]
-# 	kinit = Popen(kinit_args)
-
-# def do_kerberos_kdestroy():
-# 	kdestroy = '/usr/bin/kdestroy'
-# 	kdestroy_args = [ kdestroy ]
-# 	kdestroy = Popen(kdestroy_args)
-
 Thread(target=bk_worker).start()
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
@@ -66,11 +44,11 @@ def cartuja_prediction():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
+			# script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
 			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
-			title = 'Predicción de Calidad del Água'
+			title = 'Predicción de Calidad del Agua'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
 
@@ -81,11 +59,11 @@ def cartuja():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja')
+			script = server_document('http://192.168.10.130:9090/cartuja')
+			# script = server_document('http://10.0.20.30:9090/cartuja')
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
-			title = 'Calidad del Água'
+			title = 'Calidad del Agua'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
 		
@@ -101,7 +79,6 @@ def index():
 def login():
 	active_page = 'login'
 	if request.method == 'POST':
-		# p = pam.pam()
 		username = request.form['username']
 		password = request.form['password']
 
