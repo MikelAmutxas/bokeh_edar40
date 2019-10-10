@@ -61,6 +61,7 @@ def cartuja():
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
 			script = server_document('http://10.0.20.30:9090/cartuja')
+			script2 = serve
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
 			title = 'Calidad del Agua'

@@ -14,6 +14,7 @@ from bokeh.models.tools import HoverTool
 from bokeh.models.widgets import Tabs, Panel
 
 import pandas as pd
+from pandas.io.json import json_normalize
 import numpy as np
 import xml.etree.ElementTree as et
 
@@ -523,23 +524,28 @@ def modify_first_descriptive(doc):
 
 	# desc = create_description()
 
-	#xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
-	xml_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
-	xml_root = et.fromstring(xml_document)
-
-	normalize_xml = xml_root[0]
-	not_normalize_xml = xml_root[1]
-	weight_xml = xml_root[2]
+	# xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
+	# xml_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
+	# xml_root = et.fromstring(xml_document)
+	json_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
+	df_perfil = [json_normalize(data) for data in json_document]
 	
-	normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
+	# normalize_xml = xml_root[0]
+	# not_normalize_xml = xml_root[1]
+	# weight_xml = xml_root[2]
+	normalize_df = df_perfil[0]
+	not_normalize_df = df_perfil[1]
+	weight_df = df_perfil[2]
+
+	# normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
 	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
 	normalize_df.valor = normalize_df.valor.astype('float')	# Correct column data types
 
-	not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
+	# not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
 	not_normalize_df['Indicador']=not_normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
 	not_normalize_df.valor = not_normalize_df.valor.astype('float')	# Correct column data types
 
-	weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
+	# weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
 	
 	normalize_plot = create_normalize_plot(normalize_df)
 	nor_rad_pl = create_radar_plot(normalize_df)

@@ -18,6 +18,7 @@ from bokeh.transform import jitter, factor_cmap, dodge
 import xml.etree.ElementTree as et
 import pandas as pd
 import numpy as np
+from pandas.io.json import json_normalize
 
 
 def create_data_source_from_dataframe(df, group_value_name, group_value):
@@ -417,22 +418,37 @@ def modify_second_descriptive(doc):
 	desc = create_description()
 
 	# xml_perfil_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')
-	xml_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
+	# xml_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
 	# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
 	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
 
-	xml_perfil_root = et.fromstring(xml_perfil_document)
+	json_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
+	# json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
+
+	df_perfil = [json_normalize(data) for data in json_perfil_document]
+	# df_prediction = [json_normalize(data) for data in json_prediction_document]
+
+	# xml_perfil_root = et.fromstring(xml_perfil_document)
 	xml_prediction_root = et.fromstring(xml_prediction_document)
 
 	decision_tree_xml = xml_prediction_root[0]
 	performance_vector_xml = xml_prediction_root[1]
 	weight_xml = xml_prediction_root[2]
 	correct_xml = xml_prediction_root[3]
-	prediction_xml = xml_perfil_root[3]
-	outlier_xml = xml_perfil_root[4]
+	# prediction_xml = xml_perfil_root[3]
+	# outlier_xml = xml_perfil_root[4]
+
+	# decision_tree_df = df_prediction[0]
+	# performance_vector_df = df_prediction[1]
+	# weight_df = df_prediction[2]
+	# correct_df = df_prediction[3]
+	prediction_df = df_perfil[3]
+	outlier_df = df_perfil[4]
 	
-	prediction_df = get_dataframe_from_xml(prediction_xml, ['Prediction', 'cluster', 'añomes'])
-	outlier_df = get_dataframe_from_xml(outlier_xml, ['outlier', 'timestamp', 'pc_1', 'pc_2', 'cluster'])
+	# prediction_df = get_dataframe_from_xml(prediction_xml, ['Prediction', 'cluster', 'añomes'])
+	# outlier_df = get_dataframe_from_xml(outlier_xml, ['outlier', 'timestamp', 'pc_1', 'pc_2', 'cluster'])
+
+
 	decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
 	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)	
 	weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
