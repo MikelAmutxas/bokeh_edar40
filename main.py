@@ -38,7 +38,7 @@ if __name__ != '__main__':
 Thread(target=bk_worker).start()
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/cartuja/prediccion', methods=['GET'])
+@app.route('/prediccion', methods=['GET'])
 def cartuja_prediction():
 	active_page = 'prediccion'
 	if 'username' in session:
@@ -46,6 +46,7 @@ def cartuja_prediction():
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
 			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
 			title = 'Predicción de Calidad del Agua'
@@ -53,15 +54,15 @@ def cartuja_prediction():
 	return redirect(url_for('login'))
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/cartuja', methods=['GET'])
-def cartuja():
+@app.route('/perfil', methods=['GET'])
+def perfil():
 	active_page = 'perfil'
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
 			script = server_document('http://10.0.20.30:9090/cartuja')
-			script2 = serve
+			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
 			title = 'Calidad del Agua'
@@ -73,7 +74,7 @@ def index():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			return redirect(url_for('cartuja'))
+			return redirect(url_for('perfil'))
 	return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
