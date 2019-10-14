@@ -74,7 +74,7 @@ def perfil():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
@@ -89,7 +89,7 @@ def perfil_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
@@ -97,14 +97,14 @@ def perfil_p2():
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
 
-@app.route('/perfil/periodo_comparativo', methods=['GET'])
+@app.route('/perfil/comparativo', methods=['GET'])
 def perfil_comp():
 	active_page = 'perfil'
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
@@ -146,7 +146,7 @@ def cartuja_prediction_p2():
 	return redirect(url_for('login'))
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/prediccion/periodo_comp', methods=['GET'])
+@app.route('/prediccion/comparativo', methods=['GET'])
 def cartuja_prediction_comp():
 	active_page = 'prediccion'
 	if 'username' in session:

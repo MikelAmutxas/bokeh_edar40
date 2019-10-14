@@ -128,6 +128,7 @@ def create_corrects_plot(prediction_values, data_dict):
 	corrects_plot.title.align = 'left'
 	corrects_plot.title.text_font_size = '16px'
 	corrects_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+	corrects_plot.min_border_right = 15
 
 
 	return corrects_plot
@@ -177,8 +178,8 @@ def create_performance_vector_table(data_dict):
 	source = ColumnDataSource(data_dict)
 	columns = [TableColumn(field=key, title=key) for key in data_dict]
 
-	table = DataTable(source=source, columns=columns, height=200, sizing_mode='stretch_width')
-
+	table = DataTable(source=source, columns=columns, max_width=700, height=200, sizing_mode='stretch_width')
+	# table.min_border_right = 15
 	return table
 
 def create_decision_tree_menu():
@@ -330,6 +331,7 @@ def create_outlier_plot(df):
 	outlier_plot.title.align = 'left'
 	outlier_plot.title.text_font_size = '16px'
 	outlier_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+	outlier_plot.min_border_right = 15
 	outlier_plot.add_tools(hover_tool)
 
 	return outlier_plot
@@ -389,6 +391,7 @@ def create_prediction_plot(df):
 	prediction_plot.title.text_font_size = '16px'
 	prediction_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	prediction_plot.add_tools(hover_tool)
+	prediction_plot.min_border_right = 15
 
 
 	return prediction_plot
