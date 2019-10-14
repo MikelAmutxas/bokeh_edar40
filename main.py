@@ -37,38 +37,6 @@ if __name__ != '__main__':
 
 Thread(target=bk_worker).start()
 
-#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/prediccion', methods=['GET'])
-def cartuja_prediction():
-	active_page = 'prediccion'
-	if 'username' in session:
-		username = str(session.get('username'))
-		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
-			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
-			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
-			title = 'Predicción de Calidad del Agua'
-			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
-	return redirect(url_for('login'))
-
-#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/perfil', methods=['GET'])
-def perfil():
-	active_page = 'perfil'
-	if 'username' in session:
-		username = str(session.get('username'))
-		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja')
-			# script = server_document(url=r'/cartuja', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja')
-			# script = server_document(url=r'/cartuja', relative_urls=True)	
-			title = 'Calidad del Agua'
-			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
-	return redirect(url_for('login'))
-		
 @app.route('/', methods=['GET'])
 def index():
 	if 'username' in session:
@@ -96,6 +64,102 @@ def logout():
 	session.pop('username', None)
 	# do_kerberos_kdestroy()
 	return redirect(url_for('index'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/perfil', methods=['GET'])
+@app.route('/perfil/periodo1', methods=['GET'])
+def perfil():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)	
+			title = 'Calidad del Agua - Periodo 1'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+@app.route('/perfil/periodo2', methods=['GET'])
+def perfil_p2():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)	
+			title = 'Calidad del Agua - Periodo 2'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+@app.route('/perfil/periodo_comparativo', methods=['GET'])
+def perfil_comp():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja')
+			script = server_document('http://10.0.20.30:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja')
+			# script = server_document(url=r'/cartuja', relative_urls=True)	
+			title = 'Calidad del Agua - Comparativo Periodos'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion', methods=['GET'])
+@app.route('/prediccion/periodo1', methods=['GET'])
+def cartuja_prediction():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
+			title = 'Predicción de Calidad del Agua - Periodo 1'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion/periodo2', methods=['GET'])
+def cartuja_prediction_p2():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
+			title = 'Predicción de Calidad del Agua - Periodo 2'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion/periodo_comp', methods=['GET'])
+def cartuja_prediction_comp():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)	
+			title = 'Predicción de Calidad del Agua - Comparativo Periodos'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
 
 #Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
