@@ -198,10 +198,12 @@ def create_decision_tree_menu():
 
 	for line in variables_file_lines:
 		option_values.append(line.rstrip('\n'))
+	
 
 	option_values.sort(key=lambda option_value:(option_value[:2]!='O_', option_value))
 
-	selected_value = option_values[0]
+	# selected_value = option_values[0]
+	selected_value = 'Calidad_Agua'
 
 	select = Select(value=selected_value, options=option_values, width=330, height=35)
 
@@ -423,7 +425,7 @@ def modify_second_descriptive(doc):
 	# xml_perfil_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')
 	# xml_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
 	# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
-	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
+	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 5})
 
 	json_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
 	# json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
@@ -487,13 +489,10 @@ def modify_second_descriptive(doc):
 
 		# Llamar al sericio web EDAR_Cartuja_Prediccion con los nuevos parámetros
 		model_objective = decision_tree_selection_select_menu.value
-		if model_objective == 'Calidad_Agua':
-			model_discretise = '10'
-		else:
-			model_discretise = model_objective
+		model_discretise = 5
 
 		# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})
-		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})		
+		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})		
 		xml_prediction_root = et.fromstring(xml_prediction_document)
 		
 		# Obtener datos

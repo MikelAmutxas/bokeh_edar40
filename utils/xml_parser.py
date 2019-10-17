@@ -188,6 +188,8 @@ def create_decision_tree_data(xml_text):
 			node_name = re.findall(r'([a-zA-Z]*_[a-zA-Z0-9\_]*)\s', xml_tree_leafs[i])[0]
 
 		tree_node = Node(i+1, node_name, levels_count, color) # Creamos el objeto nodo con los datos obtenidos
+		print(f"tree_node = Node({i+1}, '{node_name}', {levels_count}, '{color}')")
+		print(f"tree.order_nodes(tree_node, '{node_link_text}')")
 		tree.order_nodes(tree_node, node_link_text) # Ordenamos la lista de nodos del árbol e insertamos el nuevo nodo
 		
 		# En caso de tener un nodo final debemos asignar nuevos parámetros como el color del nodo. Y en caso de tratarse de un nodo final con rango, debemos de concatenar el nombre con el valor de rango
@@ -196,6 +198,8 @@ def create_decision_tree_data(xml_text):
 			if len(range_name_range) > 0:
 				cluster_range_name = cluster_range_name + '\n' + list(range_name_range[0])[1]
 			cluster_range_node = Node(i+len(xml_tree_leafs), cluster_range_name, levels_count+1, color) # En caso de nodo final, asignamos un ID aleatorio superior a los anteriores para evitar repeticiones
+			print(f"tree_node = Node({i+len(xml_tree_leafs)}, '{cluster_range_name}', {levels_count+1}, '{color}')")
 			tree.order_nodes(cluster_range_node, node_link_text) # Ordenamos la lista de nodos del árbol e insertamos el nuevo nodo
+			print(f"tree.order_nodes(tree_node, '{node_link_text}')")
 
 	return tree

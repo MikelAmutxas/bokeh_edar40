@@ -240,9 +240,6 @@ def create_treemap(df):
 	treemap_figure.min_border_bottom = 0
 	treemap_figure.min_border_top = 0
 
-
-
-
 	return treemap_figure
 
 def create_data_source_from_dataframe(df, group_value_name, group_value):

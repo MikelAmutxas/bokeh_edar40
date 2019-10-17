@@ -243,17 +243,3 @@ class Node:
 				x_pos = self.childrens[i].parent.x + (x_gap*(i+1)) - (x_gap*(len(self.childrens)-i))
 				self.childrens[i].x = x_pos
 				self.childrens[i].y = y_pos
-
-
-
-
-
-
-
-
-
-
-
-
-
-
