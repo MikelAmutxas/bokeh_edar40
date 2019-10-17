@@ -3,7 +3,7 @@ from utils.rapidminer_proxy import call_webservice
 from utils.xml_parser import get_dataframe_from_xml
 import utils.bokeh_utils as bokeh_utils
 
-from bokeh.layouts import column, row, widgetbox, grid
+from bokeh.layouts import column, row, widgetbox, grid,layout
 from bokeh.models import ColumnDataSource, Div, DateRangeSlider, DatePicker, Button, DataTable, TableColumn, LabelSet, Span, Label
 from bokeh.models.markers import Circle
 from bokeh.plotting import figure, curdoc, show
@@ -24,7 +24,6 @@ def create_treemap(df):
 	Parameters:
 		df (Dataframe): Dataframe de datos
 	"""
-
 
 	def sum_indicador_values(indicador, df):
 		"""Suma los valores de un indicador o variable concreta
@@ -449,7 +448,7 @@ def create_not_normalize_plot(df):
 		TableColumn(field='Units', title='Unidad', width=30)
 	]
 
-	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='fixed', width=470, height=370)
+	data_table = DataTable(source=source, columns=columns, selectable=False, sizing_mode='stretch_width', max_width=650, height=200)
 
 	return data_table
 
@@ -470,7 +469,7 @@ def create_weight_plot(df):
 		('Peso', '@Weight'),
 	]
 
-	weight_plot = figure(height=400, toolbar_location=None, sizing_mode='stretch_width',y_range=FactorRange(factors=source.data['Attribute']), x_range=(0,1), tooltips=TOOLTIPS)
+	weight_plot = figure(max_width=650, height=400, toolbar_location=None, sizing_mode='stretch_width',y_range=FactorRange(factors=source.data['Attribute']), x_range=(0,1), tooltips=TOOLTIPS)
 	weight_plot.hbar(y='Attribute', left='Weight', right=0, source=source, height=0.6, fill_color=bokeh_utils.BAR_COLORS_PALETTE[0], line_color=bokeh_utils.BAR_COLORS_PALETTE[0])
 
 	weight_plot.title.text = 'Peso de indicadores influentes'
@@ -518,52 +517,77 @@ def create_title(text):
 	return title
 
 def modify_first_descriptive(doc):
-
+	args = doc.session_context.request.arguments
+	try:
+		periodo = int(args.get('periodo')[0])
+	except:
+		periodo = 0
+	print(periodo)
 	# desc = create_description()
-
-	# xml_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')	
-	# xml_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out?', 'rapidminer', 'rapidminer')
-	# xml_root = et.fromstring(xml_document)
+	#Llamada al webservice de RapidMiner
 	json_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
 	df_perfil = [json_normalize(data) for data in json_document]
 	
-	# normalize_xml = xml_root[0]
-	# not_normalize_xml = xml_root[1]
-	# weight_xml = xml_root[2]
+	# Extracción de los dataframe en valores absolutos
 	normalize_df = df_perfil[0]
 	not_normalize_df = df_perfil[1]
 	weight_df = df_perfil[2]
 
-	# normalize_df = get_dataframe_from_xml(normalize_xml, ['cluster', 'Indicador', 'valor'])
-	normalize_df['Indicador']=normalize_df.Indicador.replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
-	normalize_df.valor = normalize_df.valor.astype('float')	# Correct column data types
+	# Extracción de los dataframe en valores de rendimientos
+	normalize_rend_df = df_perfil[0]
+	not_normalize_rend_df = df_perfil[1]
+	weight_rend_df = df_perfil[2]
 
-	# not_normalize_df = get_dataframe_from_xml(not_normalize_xml, ['cluster', 'Indicador', 'valor'])
-	not_normalize_df['Indicador']=not_normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	# Eliminamos texto repetido de los indicadores
-	not_normalize_df.valor = not_normalize_df.valor.astype('float')	# Correct column data types
+	# Eliminamos texto repetido average() de los indicadores
+	normalize_df['Indicador']=normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	
+	not_normalize_df['Indicador']=not_normalize_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')
+	normalize_rend_df['Indicador']=normalize_rend_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	
+	not_normalize_rend_df['Indicador']=not_normalize_rend_df['Indicador'].replace(regex=[r'\(', r'\)', 'average'],value='')	
 
-	# weight_df = get_dataframe_from_xml(weight_xml, ['Attribute', 'Weight'])
-	
+	# Convertimos las columnas numericas a flotante
+	normalize_df['valor'] = normalize_df['valor'].astype('float')
+	not_normalize_df['valor'] = not_normalize_df['valor'].astype('float')
+	normalize_rend_df['valor'] = normalize_rend_df['valor'].astype('float')
+	not_normalize_rend_df['valor'] = not_normalize_rend_df['valor'].astype('float')
+
+	# Creación de los gráficos
+	## Gráfico de perfil y araña normalizado-absolutos
 	normalize_plot = create_normalize_plot(normalize_df)
 	nor_rad_pl = create_radar_plot(normalize_df)
-
-	# Creacion del panel
 	l_panel = Panel(child=nor_rad_pl, title='Diagrama de araña')
 	r_panel = Panel(child=normalize_plot, title='Diagrama de linea')
 	profile_tabs = Tabs(tabs=[l_panel, r_panel], height = 400, sizing_mode="stretch_both", max_width=650, margin=[0,10,0,0])
-	profile_title = create_title('Perfil de calidad del agua (normalizado)')
-	profile_widget_box = widgetbox([profile_title, profile_tabs], width=470, height=400, sizing_mode='stretch_width', spacing=3)
-	treemap_plot = create_treemap(normalize_df)
-	not_normalize_table_title = create_title('Indicadores influentes sin normalizar')
-	not_normalize_table = create_not_normalize_plot(not_normalize_df)
-	not_normalize_widget_box = widgetbox([not_normalize_table_title, not_normalize_table], width=470, height=250, sizing_mode='fixed', spacing=3)
-	# not_normalize_widget_box.margin = (0, 0, 0, 80)	# Añadimos margen a la tabla para centrarla mejor (top, bottom, right, left)
-	weight_plot = create_weight_plot(weight_df)
+	profile_title = create_title('Perfil de calidad del agua (normalizado-absolutos)')
+	profile_widget_box = widgetbox([profile_title, profile_tabs], max_width=650, height=400, sizing_mode='stretch_width', spacing=3)
+	
+	## Gráfico de perfil y araña normalizado-rendimientos
+	nor_rad_pl_rend = create_radar_plot(normalize_rend_df)
+	normalize_plot_rend = create_normalize_plot(normalize_rend_df)
+	l_panel_rend = Panel(child=nor_rad_pl_rend, title='Diagrama de araña')
+	r_panel_rend = Panel(child=normalize_plot_rend, title='Diagrama de linea')
+	profile_tabs_rend = Tabs(tabs=[l_panel_rend, r_panel_rend], height = 400, sizing_mode="stretch_both", max_width=650, margin=[0,10,0,0])
+	profile_title_rend = create_title('Perfil de calidad del agua (normalizado-rendimientos)')
+	profile_widget_box_rend = widgetbox([profile_title_rend, profile_tabs_rend], max_width=650, height=400, sizing_mode='stretch_width', spacing=3)
 
+	## Tabla sin normalizar valores absolutos
+	not_normalize_table_title = create_title('Indicadores influentes sin normalizar (absolutos)')
+	not_normalize_table = create_not_normalize_plot(not_normalize_df)
+	not_normalize_widget_box = widgetbox([not_normalize_table_title, not_normalize_table], max_width=650, height=250, sizing_mode='stretch_width', spacing=3)
+
+	## Tabla sin normalizar valores rendimientos
+	not_normalize_table_title_rend = create_title('Indicadores influentes sin normalizar (rendimientos)')
+	not_normalize_table_rend = create_not_normalize_plot(not_normalize_rend_df)
+	not_normalize_widget_box_rend = widgetbox([not_normalize_table_title_rend, not_normalize_table_rend], max_width=650, height=250, sizing_mode='stretch_width', spacing=3)
+	
+	## Gráfico de peso de indicadores absolutos y rendimientos
+	weight_plot = create_weight_plot(weight_df)
+	weight_plot_rend = create_weight_plot(weight_rend_df)
+
+	# Distribución de los gráficos con una grid de bokeh
 	l = grid([
-		# [desc],
-		[profile_widget_box, treemap_plot],
-		[not_normalize_widget_box, column(weight_plot)]],
+		[profile_widget_box, profile_widget_box_rend],
+		[not_normalize_widget_box, not_normalize_widget_box_rend],
+		[weight_plot, weight_plot_rend]],
 		sizing_mode='stretch_both')
 
 	doc.add_root(l)

@@ -5,7 +5,7 @@ import utils.bokeh_utils as bokeh_utils
 from bokeh_edar40.visualizations.decision_tree import *
 
 from bokeh.core.properties import value
-from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem
+from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label
 from bokeh.models.ranges import FactorRange
 from bokeh.models.widgets import Select, Button, TableColumn, DataTable
 from bokeh.palettes import Spectral6
@@ -19,6 +19,8 @@ import xml.etree.ElementTree as et
 import pandas as pd
 import numpy as np
 from pandas.io.json import json_normalize
+from datetime import datetime as dt
+import time
 
 
 def create_data_source_from_dataframe(df, group_value_name, group_value):
@@ -358,10 +360,13 @@ def create_prediction_plot(df):
 		mode = 'mouse'
 		)
 
-	prediction_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
-
+	# Estructuración de los tipos de datos del dataframe
 	df['añomes'] = pd.to_datetime(df['añomes'], format='%m/%d/%y %I:%M %p')
 	df['Prediction'] = pd.to_numeric(pd.Series(df['Prediction'].values))
+
+	prediction_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
+	
+
 	
 	source_cluster_0 = create_data_source_from_dataframe(df, 'cluster', 'cluster_0')
 	source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
@@ -386,6 +391,14 @@ def create_prediction_plot(df):
 	prediction_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	prediction_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
 	prediction_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
+	# print(x_axis_tick_vals)
+	# Linea vertical para definir el horizonte de predicción
+	prediction_date = time.mktime(dt(2019, 2, 1, 0, 0, 0).timetuple())*1000
+	vline = Span(location=prediction_date, dimension='height', line_color='gray', line_alpha=0.6, line_dash='dotted', line_width=2)
+	prediction_plot.add_layout(vline)
+	# Etiqueta linea horizontal
+	vlabel = Label(x=prediction_date, y=40, text='→Predicción', text_color='gray', text_alpha=0.6, text_font_size='14px')
+	prediction_plot.add_layout(vlabel)
 
 	prediction_plot.title.text = 'Predicción de los clusters a futuro'
 	prediction_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR

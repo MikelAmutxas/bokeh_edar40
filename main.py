@@ -74,7 +74,7 @@ def perfil():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
+			script = server_document('http://10.0.20.30:9090/cartuja/perfil', arguments={'periodo':1})
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
@@ -89,7 +89,7 @@ def perfil_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
+			script = server_document('http://10.0.20.30:9090/cartuja/perfil', arguments={'periodo':2})
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
