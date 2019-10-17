@@ -431,6 +431,63 @@ def create_description():
 	''')
 	return desc
 
+def create_new_pred_plot(df, target='Calidad_Agua'):
+	"""Crea gráfica de predicciones contra valores reales
+	Parameters:
+		df (Dataframe): Dataframe con los datos a mostrar en la visualización
+
+	Returns:
+		Figure: Gráfica de predicciones contra valores reales
+	"""
+
+	hover_tool = HoverTool(
+		tooltips = [
+			('Fecha', '@timestamp{%b %Y}'),
+			('Valor', '@valor'),
+		],
+		formatters = {
+			'timestamp': 'datetime',
+		},
+		mode = 'mouse'
+		)
+
+	new_pred_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
+
+	df['timestamp'] = pd.to_datetime(df['timestamp'])
+	# df['outlier'] = pd.to_numeric(pd.Series(df['outlier'].values))
+
+	# source_cluster_0 = create_data_source_from_dataframe(df, target, 'cluster_0')
+	source_cluster_0  = ColumnDataSource(df[['timestamp',target]])
+	source_cluster_1  = ColumnDataSource(df[['timestamp','prediction-'+target+'-']])
+	# source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
+	# source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
+	# source_cluster_3 = create_data_source_from_dataframe(df, 'cluster', 'cluster_3')
+
+	new_pred_plot.circle(x='timestamp', y=target, source=source_cluster_0, color=bokeh_utils.LINE_COLORS_PALETTE[0], size=6, legend='Real')
+	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_1, color=bokeh_utils.LINE_COLORS_PALETTE[1], size=6, legend='Cluster 1')
+	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_2, color=bokeh_utils.LINE_COLORS_PALETTE[2], size=6, legend='Cluster 2')
+	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_3, color=bokeh_utils.LINE_COLORS_PALETTE[3], size=6, legend='Cluster 3')
+
+	new_pred_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	new_pred_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+	new_pred_plot.legend.location = 'top_left'
+	new_pred_plot.legend.orientation = 'horizontal'
+	new_pred_plot.legend.click_policy = 'hide'
+	new_pred_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+	new_pred_plot.xaxis[0].formatter = DatetimeTickFormatter(years=['%Y'])
+
+	new_pred_plot.title.text = 'Probabilidad de Outliers'
+	new_pred_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
+	new_pred_plot.title.align = 'left'
+	new_pred_plot.title.text_font_size = '16px'
+	new_pred_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+	new_pred_plot.min_border_right = 15
+	new_pred_plot.add_tools(hover_tool)
+
+	return new_pred_plot
+
 def modify_second_descriptive(doc):
 
 	desc = create_description()
@@ -462,6 +519,8 @@ def modify_second_descriptive(doc):
 	# correct_df = df_prediction[3]
 	prediction_df = df_perfil[3]
 	outlier_df = df_perfil[4]
+	daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
+	print(daily_pred_df.head(100))
 	
 	# prediction_df = get_dataframe_from_xml(prediction_xml, ['Prediction', 'cluster', 'añomes'])
 	# outlier_df = get_dataframe_from_xml(outlier_xml, ['outlier', 'timestamp', 'pc_1', 'pc_2', 'cluster'])
@@ -476,6 +535,7 @@ def modify_second_descriptive(doc):
 	correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, 'Calidad_Agua', possible_values)
 
 	prediction_plot = create_prediction_plot(prediction_df)
+	new_pred_plot = create_new_pred_plot(daily_pred_df, 'Calidad_Agua')
 	outlier_plot = create_outlier_plot(outlier_df)
 	decision_tree_plot = create_decision_tree_plot()
 	decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
@@ -494,6 +554,7 @@ def modify_second_descriptive(doc):
 		[decision_tree_menu_title],
 		[decision_tree_selection_wb, performance_vector_table],
 		[decision_tree_plot],
+		[new_pred_plot],
 		[weight_plot, corrects_plot]
 
 	], sizing_mode='stretch_both')

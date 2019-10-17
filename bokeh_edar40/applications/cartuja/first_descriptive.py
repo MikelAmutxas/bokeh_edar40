@@ -522,7 +522,7 @@ def modify_first_descriptive(doc):
 		periodo = int(args.get('periodo')[0])
 	except:
 		periodo = 0
-	print(periodo)
+	print(f'periodo: {periodo}')
 	# desc = create_description()
 	#Llamada al webservice de RapidMiner
 	json_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
