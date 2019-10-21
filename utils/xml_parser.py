@@ -88,6 +88,7 @@ def create_performance_vector_data(xml_text):
 			data_dict[column_titles[i]].append(class_recall_sum[i])
 
 	data_dict['class_precision'].append('')
+
 	return data_dict
 
 def create_correct_quantity_data(result_set, model_value, possible_values):

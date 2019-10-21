@@ -5,15 +5,15 @@ import utils.bokeh_utils as bokeh_utils
 from bokeh_edar40.visualizations.decision_tree import *
 
 from bokeh.core.properties import value
-from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label
+from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper
 from bokeh.models.ranges import FactorRange
 from bokeh.models.widgets import Select, Button, TableColumn, DataTable
 from bokeh.palettes import Spectral6
 from bokeh.plotting import figure
-from bokeh.layouts import layout, widgetbox
+from bokeh.layouts import layout, widgetbox, column, row, gridplot
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.tickers import FixedTicker
-from bokeh.transform import jitter, factor_cmap, dodge
+from bokeh.transform import jitter, factor_cmap, dodge, transform
 
 import xml.etree.ElementTree as et
 import pandas as pd
@@ -177,12 +177,65 @@ def create_performance_vector_table(data_dict):
 		Figure: Gráfica de importancia de predictores
 	"""
 
-	source = ColumnDataSource(data_dict)
-	columns = [TableColumn(field=key, title=key) for key in data_dict]
+	'''Old version - DataTable
+	# source = ColumnDataSource(data_dict)
+	# columns = [TableColumn(field=key, title=key) for key in data_dict]
 
-	table = DataTable(source=source, columns=columns, max_width=700, height=200, sizing_mode='stretch_width')
+	# table = DataTable(source=source, columns=columns, max_width=700, height=200, sizing_mode='stretch_width')
 	# table.min_border_right = 15
-	return table
+	'''
+	# Paleta de colores
+	colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
+
+	# Had a specific mapper to map color with value
+	mapper = LinearColorMapper(palette=colors, low=data_dict.value.min(), high=data_dict.value.max())
+
+	# Define a figure
+	p = figure(
+		plot_height=300,
+		# title="Matriz de confusión",
+		x_range=list(data_dict.Actual.drop_duplicates()),
+		y_range=list(reversed(data_dict.Prediction.drop_duplicates())),
+		toolbar_location=None,
+		tools="",
+		x_axis_location="above",
+		x_axis_label="Actual Label",
+		y_axis_label="Predicted Label",
+		sizing_mode='stretch_width')
+	p.xaxis.axis_line_color = None
+	p.yaxis.axis_line_color = None
+	p.xaxis.major_label_orientation = np.pi/4
+	
+	# Create rectangle for heatmap
+	p.rect(
+		x="Actual",
+		y="Prediction",
+		width=1,
+		height=1,
+		source=ColumnDataSource(data_dict),
+		line_color=None,
+		fill_color=transform('value', mapper))
+	p.text(x="Actual",
+		y="Prediction", text='value', text_align="center", text_baseline="middle", source=ColumnDataSource(data_dict))
+	
+	p.border_fill_color = bokeh_utils.BACKGROUND_COLOR	
+	p.background_fill_color = bokeh_utils.BACKGROUND_COLOR
+	# p.title.text = 'Matriz de confusión'
+	# p.title.text_color = bokeh_utils.TITLE_FONT_COLOR
+	# p.title.align = 'left'
+	# p.title.text_font_size = '16px'
+	# p.title.offset = -75
+	# Add legend
+	color_bar = ColorBar(
+    color_mapper=mapper,
+    location=(0, 0),
+    ticker=BasicTicker(desired_num_ticks=len(colors)))
+	color_bar.background_fill_color = bokeh_utils.BACKGROUND_COLOR
+
+	p.add_layout(color_bar, 'right')
+
+	return p, color_bar
+	#return table
 
 def create_decision_tree_menu():
 	"""Crea menú de selección de variables para modelización del árbol de decisión
@@ -207,9 +260,9 @@ def create_decision_tree_menu():
 	# selected_value = option_values[0]
 	selected_value = 'Calidad_Agua'
 
-	select = Select(value=selected_value, options=option_values, width=330, height=35)
+	select = Select(value=selected_value, options=option_values, height=35)
 
-	button = Button(label='Modelizar', button_type='primary', width=330, height=45)
+	button = Button(label='Modelizar', button_type='primary', height=45)
 
 	return button, select
 
@@ -431,6 +484,31 @@ def create_description():
 	''')
 	return desc
 
+def create_df_confusion(data_dict):
+	"""Crea el dataframe para la matriz de confusion
+	Parameters:
+		data_dict (Diccionario): Diccionario ordenado con los datos de la matriz de confusión
+	
+	Returns:
+		df: Dataframe con los datos convertidos para la matriz de confusion
+	"""
+	# Cargar datos
+	df_original = pd.DataFrame(data_dict, columns=data_dict.keys())
+	
+	# Slicing dataframe for confussion matrix and removing redundant text
+	df = df_original.drop("class_precision", axis=1)
+	df['True'].replace(regex="pred.", value="", inplace=True)
+	df = df.set_index("True")
+	df = df.drop("class recall", axis=0)
+	df.columns.name = 'Actual'
+	df.index.name = 'Prediction'
+	df = df.transpose()
+
+	# Converting dataframe to right format
+	df = df.apply(pd.to_numeric)
+	df = df.stack().rename("value").reset_index()
+	return df
+
 def create_new_pred_plot(df, target='Calidad_Agua'):
 	"""Crea gráfica de predicciones contra valores reales
 	Parameters:
@@ -520,14 +598,16 @@ def modify_second_descriptive(doc):
 	prediction_df = df_perfil[3]
 	outlier_df = df_perfil[4]
 	daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
-	print(daily_pred_df.head(100))
+	# print(daily_pred_df.head(100))
 	
 	# prediction_df = get_dataframe_from_xml(prediction_xml, ['Prediction', 'cluster', 'añomes'])
 	# outlier_df = get_dataframe_from_xml(outlier_xml, ['outlier', 'timestamp', 'pc_1', 'pc_2', 'cluster'])
 
 
 	decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)	
+	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
+	performance_vector_df = create_df_confusion(performance_vector_data_dict)
+	# print(performance_vector_data_dict)	
 	weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
 	possible_values = list(performance_vector_data_dict.keys())
 	possible_values.remove('True')
@@ -540,24 +620,28 @@ def modify_second_descriptive(doc):
 	decision_tree_plot = create_decision_tree_plot()
 	decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 	decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-	decision_tree_menu_title = Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
+	decision_tree_menu_title = Div(text='Simulación', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
 	decision_tree_selection_button, decision_tree_selection_select_menu = create_decision_tree_menu()
-	decision_tree_selection_wb = widgetbox([decision_tree_selection_select_menu , decision_tree_selection_button], width=350, height=100, sizing_mode='fixed')
-	performance_vector_table = create_performance_vector_table(performance_vector_data_dict)
+	decision_tree_selection_wb = widgetbox([decision_tree_selection_select_menu , decision_tree_selection_button], height=100, sizing_mode='stretch_width')
+	performance_vector_table, color_bar = create_performance_vector_table(performance_vector_df)
 	weight_plot = create_attribute_weight_plot(weight_df)
 	corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-
+	confusion_title = Div(text='Matriz de confusión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
 	l = layout([
 		# [desc],
 		[prediction_plot],
 		[outlier_plot],
 		[decision_tree_menu_title],
-		[decision_tree_selection_wb, performance_vector_table],
+		[column([decision_tree_selection_wb, confusion_title, performance_vector_table], max_width=500), weight_plot, corrects_plot],
+		[Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')],
 		[decision_tree_plot],
-		[new_pred_plot],
-		[weight_plot, corrects_plot]
-
+		# [new_pred_plot],
+		# [weight_plot, corrects_plot]
 	], sizing_mode='stretch_both')
+	# l = gridplot([
+	# 	[prediction_plot],
+	# 	[outlier_plot]
+	# ], sizing_mode='stretch_both')
 
 	def prediction_callback():
 
@@ -580,13 +664,21 @@ def modify_second_descriptive(doc):
 		decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 		append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 
-		# Acturalizar matriz de confusión
+		# Actualizar matriz de confusión
 		performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-		source = ColumnDataSource(performance_vector_data_dict)
-		columns = [TableColumn(field=key, title=key) for key in performance_vector_data_dict]
-		performance_vector_table.source.data = source.data
-		performance_vector_table.columns = columns
-
+		performance_vector_df = create_df_confusion(performance_vector_data_dict)
+		# source = ColumnDataSource(performance_vector_data_dict)
+		# columns = [TableColumn(field=key, title=key) for key in performance_vector_data_dict]
+		# performance_vector_table.source.data = source.data
+		# performance_vector_table.columns = columns
+		source = ColumnDataSource(performance_vector_df)
+		colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
+		color_bar.color_mapper = LinearColorMapper(palette=colors, low=performance_vector_df.value.min(), high=performance_vector_df.value.max())
+		performance_vector_table.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
+		performance_vector_table.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
+		performance_vector_table.renderers[0].data_source.data = source.data
+		performance_vector_table.renderers[1].data_source.data = source.data
+		
 		# Actualizar gráfica de importancia de predictores
 		weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
 		weight_df['colors'] = bokeh_utils.BAR_COLORS_PALETTE[:len(weight_df['Attribute'].values)]
