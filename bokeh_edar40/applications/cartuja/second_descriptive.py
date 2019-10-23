@@ -192,7 +192,7 @@ def create_performance_vector_table(data_dict):
 
 	# Define a figure
 	p = figure(
-		plot_height=300,
+		plot_height=270,
 		# title="Matriz de confusión",
 		x_range=list(data_dict.Actual.drop_duplicates()),
 		y_range=list(reversed(data_dict.Prediction.drop_duplicates())),
@@ -635,13 +635,7 @@ def modify_second_descriptive(doc):
 		[column([decision_tree_selection_wb, confusion_title, performance_vector_table], max_width=500), weight_plot, corrects_plot],
 		[Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')],
 		[decision_tree_plot],
-		# [new_pred_plot],
-		# [weight_plot, corrects_plot]
 	], sizing_mode='stretch_both')
-	# l = gridplot([
-	# 	[prediction_plot],
-	# 	[outlier_plot]
-	# ], sizing_mode='stretch_both')
 
 	def prediction_callback():
 
