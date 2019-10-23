@@ -5,9 +5,9 @@ import utils.bokeh_utils as bokeh_utils
 from bokeh_edar40.visualizations.decision_tree import *
 
 from bokeh.core.properties import value
-from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper
+from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter, MonthsTicker
 from bokeh.models.ranges import FactorRange
-from bokeh.models.widgets import Select, Button, TableColumn, DataTable
+from bokeh.models.widgets import Select, Button, TableColumn, DataTable, CheckboxButtonGroup
 from bokeh.palettes import Spectral6
 from bokeh.plotting import figure
 from bokeh.layouts import layout, widgetbox, column, row, gridplot
@@ -35,6 +35,7 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 	"""
 	df = df.loc[df[group_value_name].isin([group_value])]
 	source = ColumnDataSource(df)
+
 	return source
 
 def create_corrects_plot_positions_data(number_of_values, bar_width):
@@ -132,7 +133,6 @@ def create_corrects_plot(prediction_values, data_dict):
 	corrects_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	corrects_plot.min_border_right = 15
 
-
 	return corrects_plot
 
 def create_attribute_weight_plot(df):
@@ -164,11 +164,9 @@ def create_attribute_weight_plot(df):
 	weight_plot.title.text_font_size = '16px'
 	weight_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 
-
 	return weight_plot
 
-
-def create_performance_vector_table(data_dict):
+def create_confusion_matrix(data_dict):
 	"""Crea tabla de matriz de confusión
 	Parameters:
 		data_dict (dict): Diccionario con los datos a mostrar en la visualización
@@ -246,15 +244,12 @@ def create_decision_tree_menu():
 	"""
 
 	option_values = []
-
 	variables_file = open('resources/model_variables.txt', 'r')
-
 	variables_file_lines = variables_file.readlines()
 
 	for line in variables_file_lines:
 		option_values.append(line.rstrip('\n'))
 	
-
 	option_values.sort(key=lambda option_value:(option_value[:2]!='O_', option_value))
 
 	# selected_value = option_values[0]
@@ -419,8 +414,6 @@ def create_prediction_plot(df):
 
 	prediction_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
 	
-
-	
 	source_cluster_0 = create_data_source_from_dataframe(df, 'cluster', 'cluster_0')
 	source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
 	source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
@@ -464,26 +457,6 @@ def create_prediction_plot(df):
 
 	return prediction_plot
 
-def create_description():
-	"""Crea panel de descripción del dashboard
-
-	Returns:
-		Div: Panel de descripción del dashboard
-	"""
-	desc = Div(text='''
-	<!--<div class="row">
-		<div class="card mb-4">
-			<div class="card-header">
-				<h6 class="m-0 font-weight-bold text-primary">Información General</h6>
-			</div>
-			<div class="card-body">
-				Este dashboard muestra la monitorización de calidad del agua de la planta EDAR Cartuja. POR COMPLETAR
-			</div>
-		</div>
-	</div>-->
-	''')
-	return desc
-
 def create_df_confusion(data_dict):
 	"""Crea el dataframe para la matriz de confusion
 	Parameters:
@@ -509,7 +482,7 @@ def create_df_confusion(data_dict):
 	df = df.stack().rename("value").reset_index()
 	return df
 
-def create_new_pred_plot(df, target='Calidad_Agua'):
+def create_daily_pred_plot(df, target='Calidad_Agua'):
 	"""Crea gráfica de predicciones contra valores reales
 	Parameters:
 		df (Dataframe): Dataframe con los datos a mostrar en la visualización
@@ -517,97 +490,111 @@ def create_new_pred_plot(df, target='Calidad_Agua'):
 	Returns:
 		Figure: Gráfica de predicciones contra valores reales
 	"""
+	df.rename(columns={target: 'real', 'prediction-'+target+'-': 'prediction'}, inplace=True)
+	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
+	df = df.set_index('timestamp')
+	df = df.groupby(df.index).first()
+	df = df['2018-02-01':]
+	# df.to_csv("df.csv")
+	bins = list(df['real'].unique())
+	print(bins)
+	print(df.head(100))
 
-	hover_tool = HoverTool(
-		tooltips = [
-			('Fecha', '@timestamp{%b %Y}'),
-			('Valor', '@valor'),
-		],
-		formatters = {
-			'timestamp': 'datetime',
-		},
-		mode = 'mouse'
-		)
+	if target=='Calidad_Agua':
+		df.replace(regex=['cluster_'], value='', inplace=True)
+	else:
+		df.replace(regex=[r'\[.*\]', 'range'], value='', inplace=True)
+	
+	df[['real','prediction']] = df[['real','prediction']].astype(int)
+	df['error'] = abs(df['real']-df['prediction'])
+	print(df.head())
+	print(df.dtypes)
+	# df.to_excel("df.xlsx", sheet_name="df2")
 
-	new_pred_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
+	TOOLTIPS = [
+		('Fecha', "@timestamp{%F}"),
+		('Real', '@real'),
+		("Predicho", "@prediction")
+	]
+	hover = HoverTool(tooltips = TOOLTIPS, formatters={'timestamp': 'datetime'})
 
-	df['timestamp'] = pd.to_datetime(df['timestamp'])
-	# df['outlier'] = pd.to_numeric(pd.Series(df['outlier'].values))
+	source = ColumnDataSource(df)
 
-	# source_cluster_0 = create_data_source_from_dataframe(df, target, 'cluster_0')
-	source_cluster_0  = ColumnDataSource(df[['timestamp',target]])
-	source_cluster_1  = ColumnDataSource(df[['timestamp','prediction-'+target+'-']])
-	# source_cluster_1 = create_data_source_from_dataframe(df, 'cluster', 'cluster_1')
-	# source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
-	# source_cluster_3 = create_data_source_from_dataframe(df, 'cluster', 'cluster_3')
+	daily_pred_plot = figure(plot_height=200, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
 
-	new_pred_plot.circle(x='timestamp', y=target, source=source_cluster_0, color=bokeh_utils.LINE_COLORS_PALETTE[0], size=6, legend='Real')
-	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_1, color=bokeh_utils.LINE_COLORS_PALETTE[1], size=6, legend='Cluster 1')
-	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_2, color=bokeh_utils.LINE_COLORS_PALETTE[2], size=6, legend='Cluster 2')
-	# new_pred_plot.circle(x='timestamp', y='outlier', source=source_cluster_3, color=bokeh_utils.LINE_COLORS_PALETTE[3], size=6, legend='Cluster 3')
+	daily_pred_plot.line(x='timestamp', y='real', source=source, line_width=2, line_color='#392FCC', legend='Real')
+	daily_pred_plot.line(x='timestamp', y='prediction', source=source, line_width=2, line_color='#CA574D', line_dash='dashed', legend='Predicción')
+	daily_pred_plot.line(x='timestamp', y='error', source=source, line_width=2, line_color='green', line_alpha=0.4, legend='Error')
 
-	new_pred_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	new_pred_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	daily_pred_plot.xaxis.major_label_orientation = np.pi/4
+	# x_axis_tick_vals = source.data['timestamp'].astype(int) / 10**6
+	daily_pred_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
+	# daily_pred_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
+	daily_pred_plot.xaxis.ticker = MonthsTicker(months=list(range(12)))
+	daily_pred_plot.yaxis[0].ticker.desired_num_ticks = len(bins)
+	daily_pred_plot.yaxis.ticker =  list(range(len(bins)))
+	if target == 'Calidad_Agua':
+		daily_pred_plot.yaxis.formatter = PrintfTickFormatter(format="Cluster %u")
+	else:
+		daily_pred_plot.yaxis.formatter = PrintfTickFormatter(format="Range %u")
+	daily_pred_plot.ygrid.minor_grid_line_color = None
+	
+	daily_pred_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	daily_pred_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
-	new_pred_plot.legend.location = 'top_left'
-	new_pred_plot.legend.orientation = 'horizontal'
-	new_pred_plot.legend.click_policy = 'hide'
-	new_pred_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	daily_pred_plot.legend.location = 'top_left'
+	daily_pred_plot.legend.orientation = 'horizontal'
+	daily_pred_plot.legend.click_policy = 'hide'
+	daily_pred_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
-	new_pred_plot.xaxis[0].formatter = DatetimeTickFormatter(years=['%Y'])
+	daily_pred_plot.title.text = 'Predicciones diarias'
+	daily_pred_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
+	daily_pred_plot.title.align = 'left'
+	daily_pred_plot.title.text_font_size = '16px'
+	daily_pred_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+	daily_pred_plot.min_border_right = 15
+	daily_pred_plot.add_tools(hover)
 
-	new_pred_plot.title.text = 'Probabilidad de Outliers'
-	new_pred_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
-	new_pred_plot.title.align = 'left'
-	new_pred_plot.title.text_font_size = '16px'
-	new_pred_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	new_pred_plot.min_border_right = 15
-	new_pred_plot.add_tools(hover_tool)
+	return daily_pred_plot
 
-	return new_pred_plot
+def create_div_title(title = ''):
+	div_title = Div(
+				text=title,
+				style={
+					'font-weight': 'bold',
+					'font-size': '16px',
+					'color': bokeh_utils.TITLE_FONT_COLOR,
+					'margin-top': '2px',
+					'font-family': 'inherit'},
+				height=20,
+				sizing_mode='stretch_width')
+	
+	return div_title
 
 def modify_second_descriptive(doc):
-
-	desc = create_description()
-
-	# xml_perfil_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')
-	# xml_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out', 'rapidminer', 'rapidminer')	
-	# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
+	models = set(['Calidad_Agua'])
+	# Llamada al webservice de RapidMiner
 	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 5})
-
 	json_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
-	# json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
+	# TODO json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})
 
+	# Extracción de los datos web
 	df_perfil = [json_normalize(data) for data in json_perfil_document]
-	# df_prediction = [json_normalize(data) for data in json_prediction_document]
-
-	# xml_perfil_root = et.fromstring(xml_perfil_document)
 	xml_prediction_root = et.fromstring(xml_prediction_document)
+	# TODO df_prediction = [json_normalize(data) for data in json_prediction_document]
 
 	decision_tree_xml = xml_prediction_root[0]
 	performance_vector_xml = xml_prediction_root[1]
 	weight_xml = xml_prediction_root[2]
 	correct_xml = xml_prediction_root[3]
-	# prediction_xml = xml_perfil_root[3]
-	# outlier_xml = xml_perfil_root[4]
-
-	# decision_tree_df = df_prediction[0]
-	# performance_vector_df = df_prediction[1]
-	# weight_df = df_prediction[2]
-	# correct_df = df_prediction[3]
 	prediction_df = df_perfil[3]
 	outlier_df = df_perfil[4]
 	daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
 	# print(daily_pred_df.head(100))
-	
-	# prediction_df = get_dataframe_from_xml(prediction_xml, ['Prediction', 'cluster', 'añomes'])
-	# outlier_df = get_dataframe_from_xml(outlier_xml, ['outlier', 'timestamp', 'pc_1', 'pc_2', 'cluster'])
-
 
 	decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
 	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
 	performance_vector_df = create_df_confusion(performance_vector_data_dict)
-	# print(performance_vector_data_dict)	
 	weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
 	possible_values = list(performance_vector_data_dict.keys())
 	possible_values.remove('True')
@@ -615,33 +602,43 @@ def modify_second_descriptive(doc):
 	correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, 'Calidad_Agua', possible_values)
 
 	prediction_plot = create_prediction_plot(prediction_df)
-	new_pred_plot = create_new_pred_plot(daily_pred_df, 'Calidad_Agua')
+	daily_pred_plot = create_daily_pred_plot(daily_pred_df, 'Calidad_Agua')
 	outlier_plot = create_outlier_plot(outlier_df)
 	decision_tree_plot = create_decision_tree_plot()
 	decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 	decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-	decision_tree_menu_title = Div(text='Simulación', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
-	decision_tree_selection_button, decision_tree_selection_select_menu = create_decision_tree_menu()
-	decision_tree_selection_wb = widgetbox([decision_tree_selection_select_menu , decision_tree_selection_button], height=100, sizing_mode='stretch_width')
-	performance_vector_table, color_bar = create_performance_vector_table(performance_vector_df)
+	simulation_title = create_div_title('Simulación')
+	add_model_button, model_select_menu = create_decision_tree_menu()
+	model_select_wb = widgetbox([model_select_menu , add_model_button], max_width=200, sizing_mode='stretch_width')
+	confusion_matrix, color_bar = create_confusion_matrix(performance_vector_df)
 	weight_plot = create_attribute_weight_plot(weight_df)
 	corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-	confusion_title = Div(text='Matriz de confusión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')
+	confusion_title = create_div_title('Matriz de confusión')
+	decision_tree_title = create_div_title('Arbol de decisión')
+	created_models_checkbox = CheckboxButtonGroup(labels=list(models))
+	created_models_checkbox.active = [0]
+	model_plots = layout([
+		[daily_pred_plot],
+		[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
+		[decision_tree_title],
+		[decision_tree_plot]
+	], name='Calidad_Agua')
 	l = layout([
-		# [desc],
 		[prediction_plot],
 		[outlier_plot],
-		[decision_tree_menu_title],
-		[column([decision_tree_selection_wb, confusion_title, performance_vector_table], max_width=500), weight_plot, corrects_plot],
-		[Div(text='Árbol de decisión', style={'font-weight': 'bold', 'font-size': '16px', 'color': bokeh_utils.TITLE_FONT_COLOR, 'margin-top': '2px', 'font-family': 'inherit'}, height=20, sizing_mode='stretch_width')],
-		[decision_tree_plot],
+		[simulation_title],
+		[model_select_wb, column(create_div_title('Modelos creados'), created_models_checkbox, sizing_mode='stretch_width')],
+		[model_plots]
 	], sizing_mode='stretch_both')
 
 	def prediction_callback():
-
 		# Llamar al sericio web EDAR_Cartuja_Prediccion con los nuevos parámetros
-		model_objective = decision_tree_selection_select_menu.value
+		model_objective = model_select_menu.value
 		model_discretise = 5
+
+		models.add(model_objective)
+		created_models_checkbox.labels = list(models)
+		# created_models_checkbox.active = list(models)
 
 		# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})
 		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})		
@@ -661,17 +658,13 @@ def modify_second_descriptive(doc):
 		# Actualizar matriz de confusión
 		performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
 		performance_vector_df = create_df_confusion(performance_vector_data_dict)
-		# source = ColumnDataSource(performance_vector_data_dict)
-		# columns = [TableColumn(field=key, title=key) for key in performance_vector_data_dict]
-		# performance_vector_table.source.data = source.data
-		# performance_vector_table.columns = columns
 		source = ColumnDataSource(performance_vector_df)
 		colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
 		color_bar.color_mapper = LinearColorMapper(palette=colors, low=performance_vector_df.value.min(), high=performance_vector_df.value.max())
-		performance_vector_table.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
-		performance_vector_table.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
-		performance_vector_table.renderers[0].data_source.data = source.data
-		performance_vector_table.renderers[1].data_source.data = source.data
+		confusion_matrix.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
+		confusion_matrix.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
+		confusion_matrix.renderers[0].data_source.data = source.data
+		confusion_matrix.renderers[1].data_source.data = source.data
 		
 		# Actualizar gráfica de importancia de predictores
 		weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
@@ -694,7 +687,21 @@ def modify_second_descriptive(doc):
 		corrects_plot.x_range.factors = correct_values		
 		create_bars_in_corrects_plot(corrects_plot, correct_data_dict, number_of_values, x_pos)
 
+		# TODO
+		# new_plots = layout([
+		# 	[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
+		# 	[decision_tree_title],
+		# 	[decision_tree_plot]
+		# ], name=list(models)[-1])
+		new_plots = layout([
+			[daily_pred_plot],
+			[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
+			[decision_tree_title],
+			[decision_tree_plot]
+		], name=list(models)[-1])
 
-	decision_tree_selection_button.on_click(prediction_callback)
+		model_plots.children.append(new_plots)
+		
+	add_model_button.on_click(prediction_callback)
 
 	doc.add_root(l)
