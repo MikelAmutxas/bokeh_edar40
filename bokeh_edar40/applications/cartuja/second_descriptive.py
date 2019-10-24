@@ -5,7 +5,7 @@ import utils.bokeh_utils as bokeh_utils
 from bokeh_edar40.visualizations.decision_tree import *
 
 from bokeh.core.properties import value
-from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter, MonthsTicker
+from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter, MonthsTicker, LinearAxis, Range1d
 from bokeh.models.ranges import FactorRange
 from bokeh.models.widgets import Select, Button, TableColumn, DataTable, CheckboxButtonGroup
 from bokeh.palettes import Spectral6
@@ -437,7 +437,6 @@ def create_prediction_plot(df):
 	prediction_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	prediction_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
 	prediction_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
-	# print(x_axis_tick_vals)
 	# Linea vertical para definir el horizonte de predicción
 	prediction_date = time.mktime(dt(2019, 2, 1, 0, 0, 0).timetuple())*1000
 	vline = Span(location=prediction_date, dimension='height', line_color='gray', line_alpha=0.6, line_dash='dotted', line_width=2)
@@ -497,8 +496,6 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	df = df['2018-02-01':]
 	# df.to_csv("df.csv")
 	bins = list(df['real'].unique())
-	print(bins)
-	print(df.head(100))
 
 	if target=='Calidad_Agua':
 		df.replace(regex=['cluster_'], value='', inplace=True)
@@ -507,8 +504,6 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	
 	df[['real','prediction']] = df[['real','prediction']].astype(int)
 	df['error'] = abs(df['real']-df['prediction'])
-	print(df.head())
-	print(df.dtypes)
 	# df.to_excel("df.xlsx", sheet_name="df2")
 
 	TOOLTIPS = [
@@ -520,11 +515,16 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 
 	source = ColumnDataSource(df)
 
-	daily_pred_plot = figure(plot_height=200, toolbar_location=None, sizing_mode='stretch_width', x_axis_type='datetime')
+	daily_pred_plot = figure(plot_height=200, toolbar_location='right', sizing_mode='stretch_width', x_axis_type='datetime',
+							tools='pan, box_zoom, reset')
+	daily_pred_plot.toolbar.logo = None
+	daily_pred_plot.extra_y_ranges = {'y_error': Range1d(start=0, end=df['real'].max()-df['real'].min())}
+	daily_pred_plot.add_layout(LinearAxis(y_range_name='y_error', axis_label='Error'), 'right')
 
 	daily_pred_plot.line(x='timestamp', y='real', source=source, line_width=2, line_color='#392FCC', legend='Real')
 	daily_pred_plot.line(x='timestamp', y='prediction', source=source, line_width=2, line_color='#CA574D', line_dash='dashed', legend='Predicción')
-	daily_pred_plot.line(x='timestamp', y='error', source=source, line_width=2, line_color='green', line_alpha=0.4, legend='Error')
+	daily_pred_plot.line(x='timestamp', y='error', source=source, line_width=2, line_color='green', line_alpha=0.4, legend='Error', y_range_name='y_error')
+
 
 	daily_pred_plot.xaxis.major_label_orientation = np.pi/4
 	# x_axis_tick_vals = source.data['timestamp'].astype(int) / 10**6
@@ -534,9 +534,9 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	daily_pred_plot.yaxis[0].ticker.desired_num_ticks = len(bins)
 	daily_pred_plot.yaxis.ticker =  list(range(len(bins)))
 	if target == 'Calidad_Agua':
-		daily_pred_plot.yaxis.formatter = PrintfTickFormatter(format="Cluster %u")
+		daily_pred_plot.yaxis[0].formatter = PrintfTickFormatter(format="Cluster %u")
 	else:
-		daily_pred_plot.yaxis.formatter = PrintfTickFormatter(format="Range %u")
+		daily_pred_plot.yaxis[0].formatter = PrintfTickFormatter(format="Range %u")
 	daily_pred_plot.ygrid.minor_grid_line_color = None
 	
 	daily_pred_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
@@ -590,7 +590,6 @@ def modify_second_descriptive(doc):
 	prediction_df = df_perfil[3]
 	outlier_df = df_perfil[4]
 	daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
-	# print(daily_pred_df.head(100))
 
 	decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
 	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
@@ -622,7 +621,7 @@ def modify_second_descriptive(doc):
 		[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
 		[decision_tree_title],
 		[decision_tree_plot]
-	], name='Calidad_Agua')
+	], name='Calidad_Agua', sizing_mode='stretch_width')
 	l = layout([
 		[prediction_plot],
 		[outlier_plot],
@@ -638,7 +637,7 @@ def modify_second_descriptive(doc):
 
 		models.add(model_objective)
 		created_models_checkbox.labels = list(models)
-		# created_models_checkbox.active = list(models)
+		created_models_checkbox.active = list(range(len(models)))
 
 		# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})
 		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})		
@@ -687,18 +686,12 @@ def modify_second_descriptive(doc):
 		corrects_plot.x_range.factors = correct_values		
 		create_bars_in_corrects_plot(corrects_plot, correct_data_dict, number_of_values, x_pos)
 
-		# TODO
-		# new_plots = layout([
-		# 	[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
-		# 	[decision_tree_title],
-		# 	[decision_tree_plot]
-		# ], name=list(models)[-1])
 		new_plots = layout([
 			[daily_pred_plot],
 			[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
 			[decision_tree_title],
 			[decision_tree_plot]
-		], name=list(models)[-1])
+		], name=list(models)[-1], sizing_mode='stretch_width')
 
 		model_plots.children.append(new_plots)
 		
