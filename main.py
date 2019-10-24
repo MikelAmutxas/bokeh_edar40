@@ -75,7 +75,7 @@ def perfil():
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
 			# script = server_document('http://3.10.15.221:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja/perfil', arguments={'periodo':1})
+			script = server_document('http://10.0.20.30:9090/perfil', arguments={'periodo':1})
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/perfil', arguments={'periodo':1})
 			title = 'Calidad del Agua - Periodo 1'
@@ -89,7 +89,7 @@ def perfil_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja/perfil', arguments={'periodo':2})
+			script = server_document('http://10.0.20.30:9090/perfil', arguments={'periodo':2})
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
@@ -105,7 +105,7 @@ def perfil_comp():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja')
-			script = server_document('http://10.0.20.30:9090/cartuja/perfil')
+			script = server_document('http://10.0.20.30:9090/perfil')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
@@ -123,7 +123,7 @@ def cartuja_prediction():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
@@ -140,7 +140,7 @@ def cartuja_prediction_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
@@ -157,7 +157,7 @@ def cartuja_prediction_comp():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			script = server_document('http://10.0.20.30:9090/cartuja/prediccion')
+			script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
 			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
