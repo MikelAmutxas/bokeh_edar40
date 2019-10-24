@@ -488,14 +488,17 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	Returns:
 		Figure: Gráfica de predicciones contra valores reales
 	"""
+	print(df.head())
+	print(target)
 	df.rename(columns={target: 'real', 'prediction-'+target+'-': 'prediction'}, inplace=True)
 	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
 	df = df['2018-02-01':]
+	print(df['real'].head(100))
 	# df.to_csv("df.csv")
 	bins = list(df['real'].unique())
-
+	print(bins)
 	if target=='Calidad_Agua':
 		df.replace(regex=['cluster_'], value='', inplace=True)
 	else:
@@ -503,7 +506,9 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	
 	df[['real','prediction']] = df[['real','prediction']].astype(int)
 	df['error'] = abs(df['real']-df['prediction'])
+	# print(df.head(10))
 	# df.to_excel("df.xlsx", sheet_name="df2")
+	# df.to_csv('df.csv')
 
 	TOOLTIPS = [
 		('Fecha', "@timestamp{%F}"),
@@ -531,7 +536,9 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	# daily_pred_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
 	daily_pred_plot.xaxis.ticker = MonthsTicker(months=list(range(12)))
 	daily_pred_plot.yaxis[0].ticker.desired_num_ticks = len(bins)
-	daily_pred_plot.yaxis.ticker =  list(range(len(bins)))
+	daily_pred_plot.yaxis[0].ticker =  list(range(len(bins)))
+	# print(daily_pred_plot.yaxis.ticker)
+	print(bins)
 	if target == 'Calidad_Agua':
 		daily_pred_plot.yaxis[0].formatter = PrintfTickFormatter(format="Cluster %u")
 	else:
@@ -639,7 +646,6 @@ def modify_second_descriptive(doc):
 
 	def prediction_callback():
 		# Llamar al servicio web EDAR_Cartuja_Prediccion con los nuevos parámetros
-		global model_select_menu
 		model_objective = model_select_menu.value
 		model_discretise = 5
 
@@ -667,54 +673,53 @@ def modify_second_descriptive(doc):
 		correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
 		
 		# Crear nuevos gráficos
-		daily_pred_plot = create_daily_pred_plot(daily_pred_df, 'Calidad_Agua')
-		decision_tree_plot = create_decision_tree_plot()
-		decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
-		decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-		add_model_button, model_select_menu = create_decision_tree_menu()
-		confusion_matrix, color_bar = create_confusion_matrix(performance_vector_df)
-		weight_plot = create_attribute_weight_plot(weight_df)
-		corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-		confusion_title = create_div_title('Matriz de confusión')
-		decision_tree_title = create_div_title('Arbol de decisión')
-		
-
-		# # Actualizar árbol de decisión
-		# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
+		# daily_pred_plot = create_daily_pred_plot(daily_pred_df, model_objective)
+		# decision_tree_plot = create_decision_tree_plot()
 		# decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
-		# append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-
-		# # Actualizar matriz de confusión
-		# performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-		# performance_vector_df = create_df_confusion(performance_vector_data_dict)
-		# source = ColumnDataSource(performance_vector_df)
-		# colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
-		# color_bar.color_mapper = LinearColorMapper(palette=colors, low=performance_vector_df.value.min(), high=performance_vector_df.value.max())
-		# confusion_matrix.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
-		# confusion_matrix.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
-		# confusion_matrix.renderers[0].data_source.data = source.data
-		# confusion_matrix.renderers[1].data_source.data = source.data
+		# decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
+		# confusion_matrix, color_bar = create_confusion_matrix(performance_vector_df)
+		# weight_plot = create_attribute_weight_plot(weight_df)
+		# corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
+		# confusion_title = create_div_title('Matriz de confusión')
+		# decision_tree_title = create_div_title('Arbol de decisión')
 		
-		# # Actualizar gráfica de importancia de predictores
-		# weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-		# weight_df['colors'] = bokeh_utils.BAR_COLORS_PALETTE[:len(weight_df['Attribute'].values)]
-		# source = ColumnDataSource(weight_df)
-		# weight_plot.x_range.factors = list(weight_df['Attribute'].values)
-		# weight_plot.renderers[0].data_source.data = source.data
+		
+		# Actualizar árbol de decisión
+		decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
+		decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
+		append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 
-		# # Actualizar gráfica de aciertos
-		# possible_values = list(performance_vector_data_dict.keys())
-		# possible_values.remove('True')
-		# possible_values.remove('class_precision')
-		# correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
-		# correct_data_dict['predictions'] = correct_values
-		# number_of_values = len(correct_data_dict.keys()) - 1
-		# bar_width = 0.1
-		# x_pos = create_corrects_plot_positions_data(number_of_values, bar_width)
-		# corrects_plot.legend[0].items = []	
-		# corrects_plot.renderers = []
-		# corrects_plot.x_range.factors = correct_values		
-		# create_bars_in_corrects_plot(corrects_plot, correct_data_dict, number_of_values, x_pos)
+		# Actualizar matriz de confusión
+		performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
+		performance_vector_df = create_df_confusion(performance_vector_data_dict)
+		source = ColumnDataSource(performance_vector_df)
+		colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
+		color_bar.color_mapper = LinearColorMapper(palette=colors, low=performance_vector_df.value.min(), high=performance_vector_df.value.max())
+		confusion_matrix.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
+		confusion_matrix.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
+		confusion_matrix.renderers[0].data_source.data = source.data
+		confusion_matrix.renderers[1].data_source.data = source.data
+		
+		# Actualizar gráfica de importancia de predictores
+		weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
+		weight_df['colors'] = bokeh_utils.BAR_COLORS_PALETTE[:len(weight_df['Attribute'].values)]
+		source = ColumnDataSource(weight_df)
+		weight_plot.x_range.factors = list(weight_df['Attribute'].values)
+		weight_plot.renderers[0].data_source.data = source.data
+
+		# Actualizar gráfica de aciertos
+		possible_values = list(performance_vector_data_dict.keys())
+		possible_values.remove('True')
+		possible_values.remove('class_precision')
+		correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
+		correct_data_dict['predictions'] = correct_values
+		number_of_values = len(correct_data_dict.keys()) - 1
+		bar_width = 0.1
+		x_pos = create_corrects_plot_positions_data(number_of_values, bar_width)
+		corrects_plot.legend[0].items = []	
+		corrects_plot.renderers = []
+		corrects_plot.x_range.factors = correct_values		
+		create_bars_in_corrects_plot(corrects_plot, correct_data_dict, number_of_values, x_pos)
 
 		new_plots = layout([
 			[daily_pred_plot],
