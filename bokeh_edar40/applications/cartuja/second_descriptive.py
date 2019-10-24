@@ -494,7 +494,8 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
-	df = df['2018-02-01':]
+	df = df['2015-01-01':'2019-01-31']
+
 	# print(bins)
 	if target=='Calidad_Agua':
 		df.replace(regex=['cluster_'], value='', inplace=True)
@@ -527,8 +528,8 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 
 
 	daily_pred_plot.xaxis.major_label_orientation = np.pi/4
-	daily_pred_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
-	daily_pred_plot.xaxis.ticker = MonthsTicker(months=list(range(12)))
+	daily_pred_plot.xaxis.formatter = DatetimeTickFormatter(months=['%b %Y'])
+	daily_pred_plot.xaxis.ticker = MonthsTicker(months=list(range(1,13)))
 	
 	if target == 'Calidad_Agua':
 		daily_pred_plot.yaxis[0].ticker =  list(range(len(bins)))
