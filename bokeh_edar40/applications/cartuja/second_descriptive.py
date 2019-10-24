@@ -488,18 +488,14 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	Returns:
 		Figure: Gráfica de predicciones contra valores reales
 	"""
-	df.to_csv("df.csv")
-	print(df.head())
-	print(target)
+
 	df.rename(columns={target: 'real', 'prediction-'+target+'-': 'prediction'}, inplace=True)
 	bins = list(df['real'].unique())
 	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
 	df = df['2018-02-01':]
-	# print(df['real'].head(100))
-	# df.to_csv("df.csv")
-	print(bins)
+	# print(bins)
 	if target=='Calidad_Agua':
 		df.replace(regex=['cluster_'], value='', inplace=True)
 	else:
@@ -507,9 +503,6 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	
 	df[['real','prediction']] = df[['real','prediction']].astype(int)
 	df['error'] = abs(df['real']-df['prediction'])
-	# print(df.head(10))
-	# df.to_excel("df.xlsx", sheet_name="df2")
-	# df.to_csv('df.csv')
 
 	TOOLTIPS = [
 		('Fecha', "@timestamp{%F}"),
@@ -523,8 +516,10 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	daily_pred_plot = figure(plot_height=200, toolbar_location='right', sizing_mode='stretch_width', x_axis_type='datetime',
 							tools='pan, box_zoom, reset')
 	daily_pred_plot.toolbar.logo = None
-	daily_pred_plot.extra_y_ranges = {'y_error': Range1d(start=0, end=df['real'].max()-df['real'].min())}
-	daily_pred_plot.add_layout(LinearAxis(y_range_name='y_error', axis_label='Error'), 'right')
+	# Se añade un nuevo eje Y para el error
+	# daily_pred_plot.extra_y_ranges = {'y_error': Range1d(start=0, end=df['real'].max()-df['real'].min())}
+	daily_pred_plot.extra_y_ranges = {'y_error': Range1d(start=0, end=len(bins))}
+	daily_pred_plot.add_layout(LinearAxis(y_range_name='y_error', axis_label='Error', ticker=list(range(len(bins)))), 'right')
 
 	daily_pred_plot.line(x='timestamp', y='real', source=source, line_width=2, line_color='#392FCC', legend='Real')
 	daily_pred_plot.line(x='timestamp', y='prediction', source=source, line_width=2, line_color='#CA574D', line_dash='dashed', legend='Predicción')
@@ -532,22 +527,18 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 
 
 	daily_pred_plot.xaxis.major_label_orientation = np.pi/4
-	# x_axis_tick_vals = source.data['timestamp'].astype(int) / 10**6
 	daily_pred_plot.xaxis[0].formatter = DatetimeTickFormatter(months=['%b %Y'])
-	# daily_pred_plot.xaxis[0].ticker = FixedTicker(ticks=list(x_axis_tick_vals))
 	daily_pred_plot.xaxis.ticker = MonthsTicker(months=list(range(12)))
-	daily_pred_plot.yaxis[0].ticker.desired_num_ticks = len(bins)
 	
-	# print(daily_pred_plot.yaxis.ticker)
-	# print(bins)
 	if target == 'Calidad_Agua':
 		daily_pred_plot.yaxis[0].ticker =  list(range(len(bins)))
 		daily_pred_plot.yaxis[0].formatter = PrintfTickFormatter(format="Cluster %u")
 	else:
 		daily_pred_plot.yaxis[0].ticker =  list(range(1,1+len(bins)))
+		daily_pred_plot.y_range=Range1d(0, len(bins)+1) # Manipulates y_range
 		daily_pred_plot.yaxis[0].formatter = PrintfTickFormatter(format="Range %u")
-	daily_pred_plot.ygrid.minor_grid_line_color = None
 	
+	daily_pred_plot.ygrid.minor_grid_line_color = None
 	daily_pred_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	daily_pred_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
