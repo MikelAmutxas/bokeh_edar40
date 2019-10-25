@@ -12,8 +12,8 @@ from threading import Thread
 from subprocess import Popen
 
 app = Flask(__name__)
-server_ip = '3.10.15.221' # Amazon EC2
-# server_ip = '10.0.20.30' # Vicomtech
+# server_ip = '3.10.15.221' # Amazon EC2
+server_ip = '10.0.20.30' # Vicomtech
 
 #Configuración de secret key y logging cuando ejecutamos sobre Gunicorn
 

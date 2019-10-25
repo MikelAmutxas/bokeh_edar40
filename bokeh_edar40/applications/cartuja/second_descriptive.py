@@ -19,6 +19,7 @@ import xml.etree.ElementTree as et
 import pandas as pd
 import numpy as np
 from pandas.io.json import json_normalize
+from collections import OrderedDict
 from datetime import datetime as dt
 import time
 
@@ -175,13 +176,6 @@ def create_confusion_matrix(data_dict):
 		Figure: Gráfica de importancia de predictores
 	"""
 
-	'''Old version - DataTable
-	# source = ColumnDataSource(data_dict)
-	# columns = [TableColumn(field=key, title=key) for key in data_dict]
-
-	# table = DataTable(source=source, columns=columns, max_width=700, height=200, sizing_mode='stretch_width')
-	# table.min_border_right = 15
-	'''
 	# Paleta de colores
 	colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
 
@@ -191,7 +185,6 @@ def create_confusion_matrix(data_dict):
 	# Define a figure
 	p = figure(
 		plot_height=270,
-		# title="Matriz de confusión",
 		x_range=list(data_dict.Actual.drop_duplicates()),
 		y_range=list(reversed(data_dict.Prediction.drop_duplicates())),
 		toolbar_location=None,
@@ -218,11 +211,7 @@ def create_confusion_matrix(data_dict):
 	
 	p.border_fill_color = bokeh_utils.BACKGROUND_COLOR	
 	p.background_fill_color = bokeh_utils.BACKGROUND_COLOR
-	# p.title.text = 'Matriz de confusión'
-	# p.title.text_color = bokeh_utils.TITLE_FONT_COLOR
-	# p.title.align = 'left'
-	# p.title.text_font_size = '16px'
-	# p.title.offset = -75
+
 	# Add legend
 	color_bar = ColorBar(
     color_mapper=mapper,
@@ -232,10 +221,9 @@ def create_confusion_matrix(data_dict):
 
 	p.add_layout(color_bar, 'right')
 
-	return p, color_bar
-	#return table
+	return p
 
-def create_decision_tree_menu():
+def create_model_menu():
 	"""Crea menú de selección de variables para modelización del árbol de decisión
 
 	Returns:
@@ -243,23 +231,20 @@ def create_decision_tree_menu():
 		Select: Panel de selección de variable del menú de selección
 	"""
 
-	option_values = []
 	variables_file = open('resources/model_variables.txt', 'r')
 	variables_file_lines = variables_file.readlines()
 
-	for line in variables_file_lines:
-		option_values.append(line.rstrip('\n'))
+	option_values = [line.rstrip('\n') for line in variables_file_lines]
 	
 	option_values.sort(key=lambda option_value:(option_value[:2]!='O_', option_value))
 
-	# selected_value = option_values[0]
 	selected_value = 'Calidad_Agua'
 
+	title = create_div_title('Modelo')
 	select = Select(value=selected_value, options=option_values, height=35)
-
 	button = Button(label='Modelizar', button_type='primary', height=45)
 
-	return button, select
+	return title, button, select
 
 
 def create_decision_tree_graph_renderer(plot, tree):
@@ -494,9 +479,8 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
-	df = df['2015-01-01':'2019-01-31']
+	df = df['2018-01-01':'2019-01-31']
 
-	# print(bins)
 	if target=='Calidad_Agua':
 		df.replace(regex=['cluster_'], value='', inplace=True)
 	else:
@@ -581,7 +565,11 @@ def create_div_title(title = ''):
 	return div_title
 
 def modify_second_descriptive(doc):
-	models = set(['Calidad_Agua'])
+	# models = set(['Calidad_Agua'])
+	# models = set([])
+	# new_models = {}
+	models = OrderedDict([])
+	
 	# Llamada al webservice de RapidMiner
 	xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 5})
 	json_perfil_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Perfil_Out_JSON?', 'rapidminer', 'rapidminer', out_json=True)
@@ -592,139 +580,141 @@ def modify_second_descriptive(doc):
 	xml_prediction_root = et.fromstring(xml_prediction_document)
 	# TODO df_prediction = [json_normalize(data) for data in json_prediction_document]
 
-	decision_tree_xml = xml_prediction_root[0]
-	performance_vector_xml = xml_prediction_root[1]
-	weight_xml = xml_prediction_root[2]
-	correct_xml = xml_prediction_root[3]
+	# Asignación de los datos web a su variable correspondiente
+	# decision_tree_xml = xml_prediction_root[0]
+	# performance_vector_xml = xml_prediction_root[1]
+	# weight_xml = xml_prediction_root[2]
+	# correct_xml = xml_prediction_root[3]
 	prediction_df = df_perfil[3]
 	outlier_df = df_perfil[4]
-	daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
+	# daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', 'Calidad_Agua', 'prediction-Calidad_Agua-'])
 
-	decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-	performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-	performance_vector_df = create_df_confusion(performance_vector_data_dict)
-	weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-	possible_values = list(performance_vector_data_dict.keys())
-	possible_values.remove('True')
-	possible_values.remove('class_precision')
-	correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, 'Calidad_Agua', possible_values)
+	# Creación de los dataframes o estructuras de datos para cada variable
+	# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
+	# performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
+	# performance_vector_df = create_df_confusion(performance_vector_data_dict)
+	# weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
+	# possible_values = list(performance_vector_data_dict.keys())
+	# possible_values.remove('True')
+	# possible_values.remove('class_precision')
+	# correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, 'Calidad_Agua', possible_values)
 
+	# Creación de los gráficos y widgets para cada variable
+	## Gráficos y widgets permanentes en la interfaz
 	prediction_plot = create_prediction_plot(prediction_df)
-	daily_pred_plot = create_daily_pred_plot(daily_pred_df, 'Calidad_Agua')
 	outlier_plot = create_outlier_plot(outlier_df)
-	decision_tree_plot = create_decision_tree_plot()
-	decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
-	decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 	simulation_title = create_div_title('Simulación')
-	add_model_button, model_select_menu = create_decision_tree_menu()
-	model_select_wb = widgetbox([model_select_menu , add_model_button], max_width=200, sizing_mode='stretch_width')
-	confusion_matrix, color_bar = create_confusion_matrix(performance_vector_df)
-	weight_plot = create_attribute_weight_plot(weight_df)
-	corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-	confusion_title = create_div_title('Matriz de confusión')
-	decision_tree_title = create_div_title('Arbol de decisión')
-	created_models_checkbox = CheckboxButtonGroup(labels=list(models))
+	model_title, add_model_button, model_select_menu = create_model_menu()
+	model_select_wb = widgetbox([model_title, model_select_menu , add_model_button], max_width=200, sizing_mode='stretch_width')
+	created_models_title = create_div_title('Modelos creados')
+	created_models_checkbox = CheckboxButtonGroup(labels=list(models.keys()), height=35)
 	created_models_checkbox.active = [0]
-	model_plots = layout([
-		[daily_pred_plot],
-		[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
-		[decision_tree_title],
-		[decision_tree_plot]
-	], name='Calidad_Agua', sizing_mode='stretch_width')
-	l = layout([
-		[prediction_plot],
-		[outlier_plot],
-		[simulation_title],
-		[model_select_wb, column(create_div_title('Modelos creados'), created_models_checkbox, sizing_mode='stretch_width')],
-		[model_plots]
-	], sizing_mode='stretch_both')
+	delete_model_button = Button(label='Eliminar', button_type='danger', height=45, max_width=200)
+	created_models_wb = widgetbox([created_models_title, created_models_checkbox], max_width=900, sizing_mode='stretch_width')
+	
+	## Gráficos dinámicos en la interfaz
+	# daily_pred_plot = create_daily_pred_plot(daily_pred_df, 'Calidad_Agua')
+	# confusion_title = create_div_title('Matriz de confusión')
+	# confusion_matrix = create_confusion_matrix(performance_vector_df)
+	# weight_plot = create_attribute_weight_plot(weight_df)
+	# corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
+	# decision_tree_title = create_div_title('Arbol de decisión')	
+	# decision_tree_plot = create_decision_tree_plot()
+	# decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
+	# decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 
 	def prediction_callback():
 		# Llamar al servicio web EDAR_Cartuja_Prediccion con los nuevos parámetros
 		model_objective = model_select_menu.value
 		model_discretise = 5
-
-		models.add(model_objective)
-		created_models_checkbox.labels = list(models)
-		created_models_checkbox.active = list(range(len(models)))
-
-		# xml_prediction_document = call_webservice('http://smvhortonworks:8888/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': str(model_discretise)})
-		xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})		
-		xml_prediction_root = et.fromstring(xml_prediction_document)
 		
-		# Obtener datos
-		decision_tree_xml = xml_prediction_root[0]
-		performance_vector_xml = xml_prediction_root[1]
-		weight_xml = xml_prediction_root[2]
-		correct_xml = xml_prediction_root[3]
-		daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
-		decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-		performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-		performance_vector_df = create_df_confusion(performance_vector_data_dict)
-		weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-		possible_values = list(performance_vector_data_dict.keys())
-		possible_values.remove('True')
-		possible_values.remove('class_precision')
-		correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
-		
-		# Crear nuevos gráficos
-		daily_pred_plot = create_daily_pred_plot(daily_pred_df, model_objective)
-		decision_tree_plot = create_decision_tree_plot()
-		decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
-		decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-		confusion_matrix, color_bar = create_confusion_matrix(performance_vector_df)
-		weight_plot = create_attribute_weight_plot(weight_df)
-		corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-		confusion_title = create_div_title('Matriz de confusión')
-		decision_tree_title = create_div_title('Arbol de decisión')
-		
-		
-		# # Actualizar árbol de decisión
-		# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-		# decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
-		# append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
+		# models.update({model_objective: None})
+		if model_objective not in models:		
+			xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})		
+			xml_prediction_root = et.fromstring(xml_prediction_document)
+			
+			# Obtener datos
+			decision_tree_xml = xml_prediction_root[0]
+			performance_vector_xml = xml_prediction_root[1]
+			weight_xml = xml_prediction_root[2]
+			correct_xml = xml_prediction_root[3]
+			daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
+			decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
+			performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
+			performance_vector_df = create_df_confusion(performance_vector_data_dict)
+			weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
+			possible_values = list(performance_vector_data_dict.keys())
+			possible_values.remove('True')
+			possible_values.remove('class_precision')
+			correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
+			
+			# Crear nuevos gráficos
+			daily_pred_plot = create_daily_pred_plot(daily_pred_df, model_objective)
+			decision_tree_plot = create_decision_tree_plot()
+			decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
+			decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
+			confusion_matrix = create_confusion_matrix(performance_vector_df)
+			weight_plot = create_attribute_weight_plot(weight_df)
+			corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
+			confusion_title = create_div_title('Matriz de confusión')
+			decision_tree_title = create_div_title('Arbol de decisión')
+			new_plots = layout([
+				[daily_pred_plot],
+				[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
+				[decision_tree_title],
+				[decision_tree_plot]
+			], name=model_objective, sizing_mode='stretch_width')
+			model_plots.children.append(new_plots)
+			models.update({model_objective: new_plots})
+			models.move_to_end(model_objective, last=False)
+			created_models_checkbox.labels = list(models.keys())
+			created_models_checkbox.active = list(range(len(models.keys())))
 
-		# # Actualizar matriz de confusión
-		# performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-		# performance_vector_df = create_df_confusion(performance_vector_data_dict)
-		# source = ColumnDataSource(performance_vector_df)
-		# colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
-		# color_bar.color_mapper = LinearColorMapper(palette=colors, low=performance_vector_df.value.min(), high=performance_vector_df.value.max())
-		# confusion_matrix.x_range.factors = list(performance_vector_df.Actual.drop_duplicates())
-		# confusion_matrix.y_range.factors = list(reversed(performance_vector_df.Prediction.drop_duplicates()))
-		# confusion_matrix.renderers[0].data_source.data = source.data
-		# confusion_matrix.renderers[1].data_source.data = source.data
-		
-		# # Actualizar gráfica de importancia de predictores
-		# weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-		# weight_df['colors'] = bokeh_utils.BAR_COLORS_PALETTE[:len(weight_df['Attribute'].values)]
-		# source = ColumnDataSource(weight_df)
-		# weight_plot.x_range.factors = list(weight_df['Attribute'].values)
-		# weight_plot.renderers[0].data_source.data = source.data
-
-		# # Actualizar gráfica de aciertos
-		# possible_values = list(performance_vector_data_dict.keys())
-		# possible_values.remove('True')
-		# possible_values.remove('class_precision')
-		# correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
-		# correct_data_dict['predictions'] = correct_values
-		# number_of_values = len(correct_data_dict.keys()) - 1
-		# bar_width = 0.1
-		# x_pos = create_corrects_plot_positions_data(number_of_values, bar_width)
-		# corrects_plot.legend[0].items = []	
-		# corrects_plot.renderers = []
-		# corrects_plot.x_range.factors = correct_values		
-		# create_bars_in_corrects_plot(corrects_plot, correct_data_dict, number_of_values, x_pos)
-
-		new_plots = layout([
-			[daily_pred_plot],
-			[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
-			[decision_tree_title],
-			[decision_tree_plot]
-		], name=list(models)[-1], sizing_mode='stretch_width')
-
-		model_plots.children.append(new_plots)
-		
 	add_model_button.on_click(prediction_callback)
+
+	def remove_options_handler(new):
+		selected_labels = [created_models_checkbox.labels[elements] for elements in created_models_checkbox.active]
+		try:
+			for element in selected_labels:
+				models.pop(element)
+				model_plots.children.remove(doc.get_model_by_name(element))
+		except:
+			for element in selected_labels:
+				print(f"El modelo {element} no existe")
+		created_models_checkbox.labels = list(models.keys())
+		created_models_checkbox.active = list(range(len(models.keys())))
+	delete_model_button.on_click(remove_options_handler)
+
+	def show_hide_plots(new):
+		selected_labels = [created_models_checkbox.labels[elements] for elements in new]
+		# model_plots.children = []
+		children = []
+		for element in selected_labels:
+			# children.append(new_models[element])
+			children.append(models[element])
+		model_plots.children = children
+	created_models_checkbox.on_click(show_hide_plots)
+
+
+	# Creación del layout dinámico de la interfaz
+	model_plots = column([])
+	
+	prediction_callback()
+	# model_plots = layout([
+	# 	[daily_pred_plot],
+	# 	[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
+	# 	[decision_tree_title],
+	# 	[decision_tree_plot]
+	# ], name='Calidad_Agua', sizing_mode='stretch_width')
+
+	# Creación del layout estático de la interfaz
+	l = layout([
+		[prediction_plot],
+		[outlier_plot],
+		[simulation_title],
+		# [model_select_wb, column(created_models_title, created_models_checkbox, sizing_mode='stretch_width')],
+		[model_select_wb, column(created_models_wb, delete_model_button, sizing_mode='stretch_width')],		
+		[model_plots]
+	], sizing_mode='stretch_both')
 
 	doc.add_root(l)
