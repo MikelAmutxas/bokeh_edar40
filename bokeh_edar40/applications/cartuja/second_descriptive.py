@@ -2,13 +2,13 @@ from utils.rapidminer_proxy import call_webservice
 from utils.xml_parser import get_dataframe_from_xml, create_performance_vector_data, create_correct_quantity_data, create_decision_tree_data
 import utils.bokeh_utils as bokeh_utils
 
-from bokeh_edar40.visualizations.decision_tree import *
+# from bokeh_edar40.visualizations.decision_tree import *
 
 from bokeh.core.properties import value
 from bokeh.models import ColumnDataSource, Div, HoverTool, GraphRenderer, StaticLayoutProvider, Rect, MultiLine, LinearAxis, Grid, Legend, LegendItem, Span, Label, BasicTicker, ColorBar, LinearColorMapper, PrintfTickFormatter, MonthsTicker, LinearAxis, Range1d
 from bokeh.models.ranges import FactorRange
 from bokeh.models.widgets import Select, Button, TableColumn, DataTable, CheckboxButtonGroup
-from bokeh.palettes import Spectral6
+# from bokeh.palettes import Spectral6
 from bokeh.plotting import figure
 from bokeh.layouts import layout, widgetbox, column, row, gridplot
 from bokeh.models.formatters import DatetimeTickFormatter
