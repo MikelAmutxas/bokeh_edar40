@@ -96,7 +96,7 @@ def create_bars_in_corrects_plot(plot, data_dict, number_of_values, x_pos):
 		legend.items = legend_items
 
 
-def create_corrects_plot(prediction_values, data_dict):
+def create_corrects_plot(prediction_values, data_dict, target):
 	"""Crea gráfica de aciertos
 	Parameters:
 		prediction_values (list): Lista de valores predichos por el modelo
@@ -127,7 +127,7 @@ def create_corrects_plot(prediction_values, data_dict):
 	corrects_plot.legend.click_policy = 'hide'
 	corrects_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
-	corrects_plot.title.text = 'Gráfica de aciertos'
+	corrects_plot.title.text = f'Gráfica de aciertos - {target}'
 	corrects_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	corrects_plot.title.align = 'left'
 	corrects_plot.title.text_font_size = '16px'
@@ -136,7 +136,7 @@ def create_corrects_plot(prediction_values, data_dict):
 
 	return corrects_plot
 
-def create_attribute_weight_plot(df):
+def create_attribute_weight_plot(df, target):
 	"""Crea gráfica de importancia de predictores
 	Parameters:
 		df (Dataframe): Dataframe con los datos a mostrar en la visualización
@@ -159,7 +159,7 @@ def create_attribute_weight_plot(df):
 
 	weight_plot.y_range.start = 0
 
-	weight_plot.title.text = 'Importancia de los predictores'
+	weight_plot.title.text = f'Importancia de los predictores - {target}'
 	weight_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
@@ -532,7 +532,7 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	daily_pred_plot.legend.click_policy = 'hide'
 	daily_pred_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
-	daily_pred_plot.title.text = 'Predicciones diarias'
+	daily_pred_plot.title.text = f'Predicciones diarias - {target}'
 	daily_pred_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
 	daily_pred_plot.title.align = 'left'
 	daily_pred_plot.title.text_font_size = '16px'
@@ -623,10 +623,10 @@ def modify_second_descriptive(doc):
 			decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 			decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 			confusion_matrix = create_confusion_matrix(performance_vector_df)
-			weight_plot = create_attribute_weight_plot(weight_df)
-			corrects_plot = create_corrects_plot(correct_values, correct_data_dict)
-			confusion_title = create_div_title('Matriz de confusión')
-			decision_tree_title = create_div_title('Arbol de decisión')
+			weight_plot = create_attribute_weight_plot(weight_df, model_objective)
+			corrects_plot = create_corrects_plot(correct_values, correct_data_dict, model_objective)
+			confusion_title = create_div_title(f'Matriz de confusión - {model_objective}')
+			decision_tree_title = create_div_title(f'Arbol de decisión - {model_objective}')
 			new_plots = layout([
 				[daily_pred_plot],
 				[column([confusion_title, confusion_matrix], sizing_mode='stretch_width'), weight_plot, corrects_plot],
