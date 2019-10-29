@@ -1,5 +1,6 @@
 from utils.rapidminer_proxy import call_webservice
-from utils.xml_parser import get_dataframe_from_xml, create_performance_vector_data, create_correct_quantity_data, create_decision_tree_data
+from utils.xml_parser import get_dataframe_from_xml, create_performance_vector_data, create_correct_quantity_data
+from bokeh_edar40.visualizations.decision_tree import Node, Tree
 import utils.bokeh_utils as bokeh_utils
 
 # from bokeh_edar40.visualizations.decision_tree import *
@@ -440,30 +441,71 @@ def create_prediction_plot(df):
 
 	return prediction_plot
 
-def create_df_confusion(data_dict):
+def create_df_confusion(df_original):
 	"""Crea el dataframe para la matriz de confusion
 	Parameters:
-		data_dict (Diccionario): Diccionario ordenado con los datos de la matriz de confusión
+		df_original: Dataframe con los datos sin organizar de la matriz de confusión
 	
 	Returns:
 		df: Dataframe con los datos convertidos para la matriz de confusion
 	"""
-	# Cargar datos
-	df_original = pd.DataFrame(data_dict, columns=data_dict.keys())
 	
 	# Slicing dataframe for confussion matrix and removing redundant text
-	df = df_original.drop("class_precision", axis=1)
-	df['True'].replace(regex="pred.", value="", inplace=True)
-	df = df.set_index("True")
-	df = df.drop("class recall", axis=0)
+	df = df_original['predicted'].replace(regex="pred ", value="", inplace=True)
+	df = df.set_index("predicted")
 	df.columns.name = 'Actual'
 	df.index.name = 'Prediction'
+	df.columns = df.columns.str.replace(r"true ", "")
 	df = df.transpose()
 
 	# Converting dataframe to right format
 	df = df.apply(pd.to_numeric)
 	df = df.stack().rename("value").reset_index()
 	return df
+
+def create_decision_tree_data(df):
+	"""Crea el Tree del decision tree
+	Parameters:
+		df: Dataframe con los datos sin organizar del arbol de decision
+	
+	Returns:
+		tree: Arbol listo para graficar con sus nodos
+	"""
+	color_palette = {'cluster_0': bokeh_utils.BAR_COLORS_PALETTE[0], 'cluster_1': bokeh_utils.BAR_COLORS_PALETTE[1], 'cluster_2': bokeh_utils.BAR_COLORS_PALETTE[2], 'cluster_3': bokeh_utils.BAR_COLORS_PALETTE[3], 
+	'range1': bokeh_utils.BAR_COLORS_PALETTE[0], 'range2': bokeh_utils.BAR_COLORS_PALETTE[1], 'range3': bokeh_utils.BAR_COLORS_PALETTE[2], 'range4': bokeh_utils.BAR_COLORS_PALETTE[3], 'range5': bokeh_utils.BAR_COLORS_PALETTE[4]}
+
+	tree = Tree()
+	count = 0
+	for j, elements in enumerate(df['Condition']):
+		leaf = elements.split(' & ')
+		print(leaf)
+		for i in range(len(leaf)+1):
+			if i < len(leaf):
+				node = leaf[i].split(' ', 1)
+				print(node)
+				node_name = node[0]
+				tree_node = Node(count+1, node_name, i, '#c2e8e0')
+				print(f"tree_node = Node({count+1}, '{node_name}', {i}, '#c2e8e0')")
+				tree.order_nodes(tree_node, node[1])
+				print(f"tree.order_nodes(tree_node, '{node[1]}')")
+			else:
+				if pred_params['Objetivo'] == 'Calidad_Agua':
+					node_name = df['Prediction'][j]
+					color = color_palette[df['Prediction'][j]]
+				else:
+					range_split = df['Prediction'][j].split(' ', 1)
+					node_name = range_split[0] + '\n' + range_split[1]
+					color = color_palette[range_split[0]]
+					print(range_split[0])
+					print(range_split[1])
+				print(f"tree_node = Node({count+1}, '{node_name}', {i}, '{color}')")
+				tree_node = Node(count+1, node_name, i, color)
+				tree.order_nodes(tree_node, node[1])
+				print(f"tree.order_nodes(tree_node, '{node[1]}')")
+			count = count + 1	
+
+	return tree
+
 
 def create_daily_pred_plot(df, target='Calidad_Agua'):
 	"""Crea gráfica de predicciones contra valores reales
@@ -597,18 +639,25 @@ def modify_second_descriptive(doc):
 		
 		# Verificar que el modelo no ha sido creado antes
 		if model_objective not in models:		
-			xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})	
-			# TODO json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': 'Calidad_Agua'})	
-			xml_prediction_root = et.fromstring(xml_prediction_document)
+			# xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})	
+			json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': model_discretise, 'Numero_Atributos': 4})	
+			# xml_prediction_root = et.fromstring(xml_prediction_document)
 			
 			# Obtener datos
-			# TODO df_prediction = [json_normalize(data) for data in json_prediction_document]
-			decision_tree_xml = xml_prediction_root[0]
-			performance_vector_xml = xml_prediction_root[1]
-			weight_xml = xml_prediction_root[2]
-			correct_xml = xml_prediction_root[3]
-			daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
-			decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
+			df_prediction = [json_normalize(data) for data in json_prediction_document]
+
+			decision_tree_df = df_prediction[0]
+			confusion_df = df_prediction[1].reindex(columns=list(json_prediction_document[1][0].keys()))
+			weight_df = df_prediction[2]
+			daily_pred_df = df_prediction[3][['timestamp', model_objective, f'prediction({model_objective})']]
+			decision_tree_data = create_decision_tree_data(decision_tree_df)
+
+			# decision_tree_xml = xml_prediction_root[0]
+			# performance_vector_xml = xml_prediction_root[1]
+			# weight_xml = xml_prediction_root[2]
+			# correct_xml = xml_prediction_root[3]
+			# daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
+			# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
 			performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
 			performance_vector_df = create_df_confusion(performance_vector_data_dict)
 			weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
