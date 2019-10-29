@@ -97,11 +97,10 @@ def create_bars_in_corrects_plot(plot, data_dict, number_of_values, x_pos):
 		legend.items = legend_items
 
 
-def create_corrects_plot(prediction_values, data_dict, target):
+def create_corrects_plot(df, target):
 	"""Crea gráfica de aciertos
 	Parameters:
-		prediction_values (list): Lista de valores predichos por el modelo
-		data_dict (dict): Diccionario con los datos a mostrar en la visualización
+		df: Dataframe con los datos de la matriz de confusión
 
 	Returns:
 		DataTable: Tabla de matriz de confusión
@@ -647,7 +646,8 @@ def modify_second_descriptive(doc):
 			df_prediction = [json_normalize(data) for data in json_prediction_document]
 
 			decision_tree_df = df_prediction[0]
-			confusion_df = df_prediction[1].reindex(columns=list(json_prediction_document[1][0].keys()))
+			confusion_df_raw = df_prediction[1].reindex(columns=list(json_prediction_document[1][0].keys()))
+			confusion_df = create_df_confusion(confusion_df_raw)
 			weight_df = df_prediction[2]
 			daily_pred_df = df_prediction[3][['timestamp', model_objective, f'prediction({model_objective})']]
 			decision_tree_data = create_decision_tree_data(decision_tree_df)
@@ -658,20 +658,20 @@ def modify_second_descriptive(doc):
 			# correct_xml = xml_prediction_root[3]
 			# daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
 			# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-			performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-			performance_vector_df = create_df_confusion(performance_vector_data_dict)
-			weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-			possible_values = list(performance_vector_data_dict.keys())
-			possible_values.remove('True')
-			possible_values.remove('class_precision')
-			correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
+			# performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
+			# performance_vector_df = create_df_confusion(performance_vector_data_dict)
+			# weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
+			# possible_values = list(performance_vector_data_dict.keys())
+			# possible_values.remove('True')
+			# possible_values.remove('class_precision')
+			# correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
 			
 			# Crear nuevos gráficos
 			daily_pred_plot = create_daily_pred_plot(daily_pred_df, model_objective)
 			decision_tree_plot = create_decision_tree_plot()
 			decision_tree_graph = create_decision_tree_graph_renderer(decision_tree_plot, decision_tree_data)
 			decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
-			confusion_matrix = create_confusion_matrix(performance_vector_df)
+			confusion_matrix = create_confusion_matrix(confusion_df)
 			weight_plot = create_attribute_weight_plot(weight_df, model_objective)
 			corrects_plot = create_corrects_plot(correct_values, correct_data_dict, model_objective)
 			confusion_title = create_div_title(f'Matriz de confusión - {model_objective}')
