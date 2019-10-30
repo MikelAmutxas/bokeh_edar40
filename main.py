@@ -56,6 +56,9 @@ def login():
 
 		if str(username) == def_user and str(password) == def_pass:
 			session['username'] = request.form['username']
+			# next_page = request.args.get('next')
+			# print(next_page)
+			# return redirect(next_page) if next_page else redirect(url_for('index'))
 			return redirect(url_for('index'))
 		else:
 			flash('Login incorrecto, inténtalo otra vez')
@@ -64,7 +67,6 @@ def login():
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.pop('username', None)
-	# do_kerberos_kdestroy()
 	return redirect(url_for('index'))
 
 #Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
@@ -75,11 +77,7 @@ def perfil():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja')
-			# script = server_document('http://3.10.15.221:9090/cartuja', arguments={'periodo':1})
-			# script = server_document('http://10.0.20.30:9090/perfil', arguments={'periodo':1})
 			# script = server_document(url=r'/cartuja', relative_urls=True)
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/perfil', arguments={'periodo':1})
 			script = server_document(f'http://{server_ip}:9090/perfil', arguments={'periodo':1})
 			title = 'Calidad del Agua - Periodo 1'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
@@ -91,12 +89,7 @@ def perfil_p2():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja')
-			# script = server_document('http://10.0.20.30:9090/perfil', arguments={'periodo':2})
-			# script = server_document(url=r'/cartuja', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja')
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/perfil', arguments={'periodo':2})
 			script = server_document(f'http://{server_ip}:9090/perfil', arguments={'periodo':2})
 			title = 'Calidad del Agua - Periodo 2'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
@@ -108,12 +101,7 @@ def perfil_comp():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja')
-			# script = server_document('http://10.0.20.30:9090/perfil')
 			# script = server_document(url=r'/cartuja', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja')
-			# script = server_document(url=r'/cartuja', relative_urls=True)
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/perfil')
 			script = server_document(f'http://{server_ip}:9090/perfil')
 			title = 'Calidad del Agua - Comparativo Periodos'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
@@ -127,12 +115,7 @@ def cartuja_prediction():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			# script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
-			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/prediccion')
 			script = server_document(f'http://{server_ip}:9090/prediccion')
 			title = 'Predicción de Calidad del Agua - Periodo 1'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
@@ -145,12 +128,7 @@ def cartuja_prediction_p2():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			# script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
-			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/prediccion')
 			script = server_document(f'http://{server_ip}:9090/prediccion')							
 			title = 'Predicción de Calidad del Agua - Periodo 2'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
@@ -163,12 +141,7 @@ def cartuja_prediction_comp():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			# script = server_document('http://192.168.10.130:9090/cartuja/prediccion')
-			# script = server_document('http://10.0.20.30:9090/prediccion')
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://3.10.15.221:9090/cartuja/prediccion')
-			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			# script = server_document('http://bokeh.edar.vicomtech.org/cartuja/prediccion')
 			script = server_document(f'http://{server_ip}:9090/prediccion')
 			title = 'Predicción de Calidad del Agua - Comparativo Periodos'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
