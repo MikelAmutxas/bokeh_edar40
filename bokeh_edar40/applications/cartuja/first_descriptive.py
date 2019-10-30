@@ -1,6 +1,5 @@
 from bokeh_edar40.visualizations.treemap import normalize_sizes, squarify
 from utils.rapidminer_proxy import call_webservice 
-from utils.xml_parser import get_dataframe_from_xml
 import utils.bokeh_utils as bokeh_utils
 
 from bokeh.layouts import column, row, widgetbox, grid,layout
