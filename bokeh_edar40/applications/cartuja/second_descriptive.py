@@ -40,62 +40,34 @@ def create_data_source_from_dataframe(df, group_value_name, group_value):
 
 	return source
 
-def create_corrects_plot_positions_data(number_of_values, bar_width):
-	"""Inserta las barras en la gráfica de aciertos
-	Parameters:
-		number_of_values (int): Número de valores a mostrar en la visualización
-		bar_width (float): Ancho de cada barra del gráfico
+def calc_xoffset_corrects_plot(num_vals, bar_width):
+    """Calcula el x offset de las barras según su ancho
+    Parameters:
+        num_vals (int): Número de valores a mostrar en la visualización
+        bar_width (float): Ancho de cada barra del gráfico
 
-	Returns:
-		list: Valores de coordenadas X donde dibujar las barras del gráfico de aciertos
-	"""
-	x_pos = []
-	start_x = 0
+    Returns:
+        list: Valores de coordenadas X donde dibujar las barras del gráfico de aciertos
+    """
+    x_pos = []
+    start_x = 0
 
-	if number_of_values % 2 != 0:
-		start_x = 0
-	else:
-		start_x = bar_width
+    if num_vals % 2 != 0:
+        start_x = 0
+    else:
+        start_x = bar_width
 
-	# Computamos la posición de cada barra en el gráfico dependiendo del número de gráficos a mostrar por grupo de predicción
-	for i in range(number_of_values):
-		if start_x == 0:
-			x = start_x + i * (bar_width + bar_width/2) - ((bar_width*number_of_values/2) + bar_width/2)
-		else:
-			x = start_x + i * (bar_width + bar_width/2) - ((2*bar_width*number_of_values/2) - bar_width/2)
-			if i >= number_of_values/2:
-				x = x + (bar_width/2)
+    # Computamos la posición de cada barra en el gráfico dependiendo del número de gráficos a mostrar por grupo de predicción
+    for i in range(num_vals):
+        if start_x == 0:
+            x = start_x + i * (bar_width + bar_width/2) - ((bar_width*num_vals/2) + bar_width/2)
+        else:
+            x = start_x + i * (bar_width + bar_width/2) - ((2*bar_width*num_vals/2) - bar_width/2)
+            if i >= num_vals/2:
+                x = x + (bar_width/2)
+        x_pos.append(x)
 
-		x_pos.append(x)
-
-	return x_pos
-
-def create_bars_in_corrects_plot(plot, data_dict, number_of_values, x_pos):
-	"""Inserta las barras en la gráfica de aciertos
-	Parameters:
-		plot (Figura): Figura de Bokeh donde se representa la gráfica de aciertos
-		data_dict (dict): Diccionario con los datos a mostrar en la visualización
-		number_of_values (int): Número de valores a mostrar en la visualización
-		x_pos (string): Valores de coordenadas X donde dibujar las barras del gráfico de aciertos
-	"""
-
-	values_keys = list(data_dict.keys())
-	values_keys.remove('predictions')
-	source = ColumnDataSource(data=data_dict)
-
-	legend_items = []
-
-	for i in range(number_of_values):
-		vbar = plot.vbar(x=dodge('predictions', x_pos[i], range=plot.x_range), top=values_keys[i], width=0.1, source=source, color=bokeh_utils.BAR_COLORS_PALETTE[i])
-		legend_items.append(LegendItem(label=values_keys[i], renderers=[vbar]))
-
-	if len(plot.legend) == 0:
-		legend = Legend(items=legend_items)
-		plot.add_layout(legend)
-	else:
-		legend = plot.legend[0]
-		legend.items = legend_items
-
+    return x_pos
 
 def create_corrects_plot(df, target):
 	"""Crea gráfica de aciertos
@@ -105,27 +77,32 @@ def create_corrects_plot(df, target):
 	Returns:
 		DataTable: Tabla de matriz de confusión
 	"""
-	
-	data_dict['predictions'] = prediction_values
+	xlabels = list(df.keys())
+	source = ColumnDataSource(df)
 
-	corrects_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=prediction_values)
-	
-	number_of_values = len(data_dict.keys()) - 1
+	corrects_plot = figure(x_range=xlabels, plot_height=400, toolbar_location=None, sizing_mode='stretch_width')
+
 	bar_width = 0.1
-
-	x_pos = create_corrects_plot_positions_data(number_of_values, bar_width)
-	create_bars_in_corrects_plot(corrects_plot, data_dict, number_of_values, x_pos)
-
+	xloc = calc_xoffset_corrects_plot(num_vals=len(xlabels), bar_width=bar_width)
+	for i, label in enumerate(xlabels):
+		r = corrects_plot.vbar(x=dodge('Actual', xloc[i], range=corrects_plot.x_range), top=label, width=bar_width, source=source,
+				color=bokeh_utils.BAR_COLORS_PALETTE[i], legend=value(label), name=xlabels[i])
+		hover = HoverTool(tooltips=[
+			("Predicción", "$name"),
+			("Aciertos", "@$name")
+		], renderers=[r])
+		corrects_plot.add_tools(hover)
 	corrects_plot.x_range.range_padding = 0.1
+	corrects_plot.xgrid.grid_line_color = None
 	corrects_plot.y_range.start = 0
-
-	corrects_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-	corrects_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
-
-	corrects_plot.legend.location = 'top_left'
-	corrects_plot.legend.orientation = 'horizontal'
+	corrects_plot.legend.location = "top_right"
+	corrects_plot.legend.orientation = "vertical"
 	corrects_plot.legend.click_policy = 'hide'
 	corrects_plot.legend.label_text_color = bokeh_utils.LABEL_FONT_COLOR
+
+	corrects_plot.xaxis.major_label_orientation = np.pi/4
+	corrects_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
+	corrects_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 
 	corrects_plot.title.text = f'Gráfica de aciertos - {target}'
 	corrects_plot.title.text_color = bokeh_utils.TITLE_FONT_COLOR
@@ -133,7 +110,6 @@ def create_corrects_plot(df, target):
 	corrects_plot.title.text_font_size = '16px'
 	corrects_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	corrects_plot.min_border_right = 15
-
 	return corrects_plot
 
 def create_attribute_weight_plot(df, target):
@@ -167,7 +143,7 @@ def create_attribute_weight_plot(df, target):
 
 	return weight_plot
 
-def create_confusion_matrix(data_dict):
+def create_confusion_matrix(df):
 	"""Crea tabla de matriz de confusión
 	Parameters:
 		data_dict (dict): Diccionario con los datos a mostrar en la visualización
@@ -175,6 +151,8 @@ def create_confusion_matrix(data_dict):
 	Returns:
 		Figure: Gráfica de importancia de predictores
 	"""
+	# Tranformar el DataFrame en un stack
+	data_dict = df.stack().rename("value").reset_index()
 
 	# Paleta de colores
 	colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
@@ -450,7 +428,9 @@ def create_df_confusion(df_original):
 	"""
 	
 	# Slicing dataframe for confussion matrix and removing redundant text
-	df = df_original['predicted'].replace(regex="pred ", value="", inplace=True)
+	df = df_original
+	df['predicted'].replace(regex="pred ", value="", inplace=True)
+	
 	df = df.set_index("predicted")
 	df.columns.name = 'Actual'
 	df.index.name = 'Prediction'
@@ -459,10 +439,9 @@ def create_df_confusion(df_original):
 
 	# Converting dataframe to right format
 	df = df.apply(pd.to_numeric)
-	df = df.stack().rename("value").reset_index()
 	return df
 
-def create_decision_tree_data(df):
+def create_decision_tree_data(df, target='Calidad_Agua'):
 	"""Crea el Tree del decision tree
 	Parameters:
 		df: Dataframe con los datos sin organizar del arbol de decision
@@ -477,31 +456,31 @@ def create_decision_tree_data(df):
 	count = 0
 	for j, elements in enumerate(df['Condition']):
 		leaf = elements.split(' & ')
-		print(leaf)
+		# print(leaf)
 		for i in range(len(leaf)+1):
 			if i < len(leaf):
 				node = leaf[i].split(' ', 1)
-				print(node)
+				# print(node)
 				node_name = node[0]
 				tree_node = Node(count+1, node_name, i, '#c2e8e0')
-				print(f"tree_node = Node({count+1}, '{node_name}', {i}, '#c2e8e0')")
+				# print(f"tree_node = Node({count+1}, '{node_name}', {i}, '#c2e8e0')")
 				tree.order_nodes(tree_node, node[1])
-				print(f"tree.order_nodes(tree_node, '{node[1]}')")
+				# print(f"tree.order_nodes(tree_node, '{node[1]}')")
 			else:
-				if pred_params['Objetivo'] == 'Calidad_Agua':
+				if target == 'Calidad_Agua':
 					node_name = df['Prediction'][j]
 					color = color_palette[df['Prediction'][j]]
 				else:
 					range_split = df['Prediction'][j].split(' ', 1)
+					# print(f'range_split[0]:{range_split[0]}')
+					# print(f'range_split[1]:{range_split[1]}')
 					node_name = range_split[0] + '\n' + range_split[1]
 					color = color_palette[range_split[0]]
-					print(range_split[0])
-					print(range_split[1])
-				print(f"tree_node = Node({count+1}, '{node_name}', {i}, '{color}')")
+				# print(f"tree_node = Node({count+1}, '{node_name}', {i}, '{color}')")
 				tree_node = Node(count+1, node_name, i, color)
 				tree.order_nodes(tree_node, node[1])
-				print(f"tree.order_nodes(tree_node, '{node[1]}')")
-			count = count + 1	
+				# print(f"tree.order_nodes(tree_node, '{node[1]}')")
+			count = count + 1
 
 	return tree
 
@@ -514,8 +493,7 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	Returns:
 		Figure: Gráfica de predicciones contra valores reales
 	"""
-
-	df.rename(columns={target: 'real', 'prediction-'+target+'-': 'prediction'}, inplace=True)
+	df.rename(columns={target: 'real', f'prediction({target})': 'prediction'}, inplace=True)
 	bins = list(df['real'].unique())
 	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
@@ -578,8 +556,8 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	daily_pred_plot.title.align = 'left'
 	daily_pred_plot.title.text_font_size = '16px'
 	daily_pred_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	daily_pred_plot.min_border_right = 15
 	daily_pred_plot.add_tools(hover)
+	daily_pred_plot.min_border_right = 15
 
 	return daily_pred_plot
 
@@ -638,9 +616,9 @@ def modify_second_descriptive(doc):
 		
 		# Verificar que el modelo no ha sido creado antes
 		if model_objective not in models:		
-			# xml_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion', 'rapidminer', 'rapidminer', {'Objetivo': str(model_objective), 'Discretizacion': model_discretise})	
-			json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?', 'rapidminer', 'rapidminer', {'Objetivo': 'Calidad_Agua', 'Discretizacion': model_discretise, 'Numero_Atributos': 4})	
-			# xml_prediction_root = et.fromstring(xml_prediction_document)
+			json_prediction_document = call_webservice('http://rapidminer.vicomtech.org/api/rest/process/EDAR_Cartuja_Prediccion_JSON?',
+														'rapidminer', 'rapidminer', {'Objetivo': model_objective, 'Discretizacion': model_discretise, 'Numero_Atributos': 4},
+														out_json=True)	
 			
 			# Obtener datos
 			df_prediction = [json_normalize(data) for data in json_prediction_document]
@@ -650,21 +628,7 @@ def modify_second_descriptive(doc):
 			confusion_df = create_df_confusion(confusion_df_raw)
 			weight_df = df_prediction[2]
 			daily_pred_df = df_prediction[3][['timestamp', model_objective, f'prediction({model_objective})']]
-			decision_tree_data = create_decision_tree_data(decision_tree_df)
-
-			# decision_tree_xml = xml_prediction_root[0]
-			# performance_vector_xml = xml_prediction_root[1]
-			# weight_xml = xml_prediction_root[2]
-			# correct_xml = xml_prediction_root[3]
-			# daily_pred_df = get_dataframe_from_xml(correct_xml, ['timestamp', model_objective, f'prediction-{model_objective}-'])
-			# decision_tree_data = create_decision_tree_data(decision_tree_xml.text)
-			# performance_vector_data_dict = create_performance_vector_data(performance_vector_xml.text)
-			# performance_vector_df = create_df_confusion(performance_vector_data_dict)
-			# weight_df = get_dataframe_from_xml(weight_xml, ['Weight', 'Attribute'])
-			# possible_values = list(performance_vector_data_dict.keys())
-			# possible_values.remove('True')
-			# possible_values.remove('class_precision')
-			# correct_values, correct_data_dict = create_correct_quantity_data(correct_xml, model_objective, possible_values)
+			decision_tree_data = create_decision_tree_data(decision_tree_df, model_objective)
 			
 			# Crear nuevos gráficos
 			daily_pred_plot = create_daily_pred_plot(daily_pred_df, model_objective)
@@ -673,7 +637,7 @@ def modify_second_descriptive(doc):
 			decision_tree_plot = append_labels_to_decision_tree(decision_tree_plot, decision_tree_graph, decision_tree_data)
 			confusion_matrix = create_confusion_matrix(confusion_df)
 			weight_plot = create_attribute_weight_plot(weight_df, model_objective)
-			corrects_plot = create_corrects_plot(correct_values, correct_data_dict, model_objective)
+			corrects_plot = create_corrects_plot(confusion_df, model_objective)
 			confusion_title = create_div_title(f'Matriz de confusión - {model_objective}')
 			decision_tree_title = create_div_title(f'Arbol de decisión - {model_objective}')
 			new_plots = layout([
