@@ -151,7 +151,8 @@ def create_confusion_matrix(df):
 	data_dict = df.stack().rename("value").reset_index()
 
 	# Paleta de colores
-	colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
+	# colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b']
+	colors = ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c']
 
 	# Had a specific mapper to map color with value
 	mapper = LinearColorMapper(palette=colors, low=data_dict.value.min(), high=data_dict.value.max())
