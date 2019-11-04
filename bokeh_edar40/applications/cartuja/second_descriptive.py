@@ -106,6 +106,7 @@ def create_corrects_plot(df, target):
 	corrects_plot.title.text_font_size = '16px'
 	corrects_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	corrects_plot.min_border_right = 15
+
 	return corrects_plot
 
 def create_attribute_weight_plot(df, target):
@@ -351,8 +352,8 @@ def create_outlier_plot(df):
 	outlier_plot.title.align = 'left'
 	outlier_plot.title.text_font_size = '16px'
 	outlier_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	outlier_plot.min_border_right = 15
 	outlier_plot.add_tools(hover_tool)
+	outlier_plot.min_border_right = 15
 
 	return outlier_plot
 
@@ -490,19 +491,18 @@ def create_decision_tree_data(df, target='Calidad_Agua'):
 	return tree
 
 
-def create_daily_pred_plot(df, target='Calidad_Agua'):
+def create_daily_pred_plot(df_original, target='Calidad_Agua'):
 	"""Crea gráfica de predicciones contra valores reales
 	Parameters:
-		df (Dataframe): Dataframe con los datos a mostrar en la visualización
+		df_original (Dataframe): Dataframe con los datos a mostrar en la visualización
 
 	Returns:
 		Figure: Gráfica de predicciones contra valores reales
 	"""
-	df.rename(columns={target: 'real', f'prediction({target})': 'prediction'}, inplace=True)
+	df = df_original
+	df = df.rename(columns={target: 'real', f'prediction({target})': 'prediction'})
 	bins = list(df['real'].unique())
-	# df.loc[:,'timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
-	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y')
-	df.sort_values('timestamp', inplace=True)
+	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
 	df = df['2018-01-01':'2019-01-31']
@@ -520,7 +520,7 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 		('Real', '@real'),
 		("Predicho", "@prediction")
 	]
-	hover = HoverTool(tooltips = TOOLTIPS, formatters={'timestamp': 'datetime'})
+	hover_tool = HoverTool(tooltips = TOOLTIPS, formatters={'timestamp': 'datetime'})
 
 	source = ColumnDataSource(df)
 
@@ -563,7 +563,7 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	daily_pred_plot.title.align = 'left'
 	daily_pred_plot.title.text_font_size = '16px'
 	daily_pred_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
-	daily_pred_plot.add_tools(hover)
+	daily_pred_plot.add_tools(hover_tool)
 	daily_pred_plot.min_border_right = 15
 
 	return daily_pred_plot
