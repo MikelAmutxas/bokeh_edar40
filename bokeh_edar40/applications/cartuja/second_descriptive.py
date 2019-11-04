@@ -121,6 +121,12 @@ def create_attribute_weight_plot(df, target):
 
 	source = ColumnDataSource(df)
 	
+	hover_tool = HoverTool(
+		tooltips = [
+			('Peso', '@Weight{(0.00)}')
+		]
+		)
+
 	weight_plot = figure(plot_height=400, toolbar_location=None, sizing_mode='stretch_width', x_range=df['Attribute'].values)
 
 	weight_plot.vbar(x='Attribute', top='Weight', source=source, width=0.9, line_color='white', fill_color='colors')
@@ -136,6 +142,8 @@ def create_attribute_weight_plot(df, target):
 	weight_plot.title.align = 'left'
 	weight_plot.title.text_font_size = '16px'
 	weight_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
+
+	weight_plot.add_tools(hover_tool)
 
 	return weight_plot
 
@@ -492,7 +500,9 @@ def create_daily_pred_plot(df, target='Calidad_Agua'):
 	"""
 	df.rename(columns={target: 'real', f'prediction({target})': 'prediction'}, inplace=True)
 	bins = list(df['real'].unique())
-	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
+	# df.loc[:,'timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y').sort_values()
+	df['timestamp'] = pd.to_datetime(df['timestamp'], format='%m/%d/%y')
+	df.sort_values('timestamp', inplace=True)
 	df = df.set_index('timestamp')
 	df = df.groupby(df.index).first()
 	df = df['2018-01-01':'2019-01-31']

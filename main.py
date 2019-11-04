@@ -1,4 +1,5 @@
 from flask import Flask, render_template, session, redirect, url_for, request, flash
+from utils.server_config import SERVER_IP
 
 import logging
 
@@ -12,8 +13,8 @@ from threading import Thread
 from subprocess import Popen
 
 app = Flask(__name__)
-# server_ip = '3.10.15.221' # Amazon EC2
-server_ip = '10.0.20.30' # Vicomtech
+# SERVER_IP = '3.10.15.221' # Amazon EC2
+# SERVER_IP = '10.0.20.30' # Vicomtech
 
 #Configuración de secret key y logging cuando ejecutamos sobre Gunicorn
 
@@ -78,7 +79,7 @@ def perfil():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja', relative_urls=True)
-			script = server_document(f'http://{server_ip}:9090/perfil', arguments={'periodo':1})
+			script = server_document(f'http://{SERVER_IP}:9090/perfil', arguments={'periodo':1})
 			title = 'Calidad del Agua - Periodo 1'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
@@ -90,7 +91,7 @@ def perfil_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja', relative_urls=True)	
-			script = server_document(f'http://{server_ip}:9090/perfil', arguments={'periodo':2})
+			script = server_document(f'http://{SERVER_IP}:9090/perfil', arguments={'periodo':2})
 			title = 'Calidad del Agua - Periodo 2'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
@@ -102,7 +103,7 @@ def perfil_comp():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja', relative_urls=True)
-			script = server_document(f'http://{server_ip}:9090/perfil')
+			script = server_document(f'http://{SERVER_IP}:9090/perfil')
 			title = 'Calidad del Agua - Comparativo Periodos'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
@@ -116,7 +117,7 @@ def cartuja_prediction():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			script = server_document(f'http://{server_ip}:9090/prediccion')
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')
 			title = 'Predicción de Calidad del Agua - Periodo 1'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
@@ -129,7 +130,7 @@ def cartuja_prediction_p2():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			script = server_document(f'http://{server_ip}:9090/prediccion')							
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')							
 			title = 'Predicción de Calidad del Agua - Periodo 2'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
@@ -142,7 +143,7 @@ def cartuja_prediction_comp():
 		username = str(session.get('username'))
 		if username == 'rapidminer':
 			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
-			script = server_document(f'http://{server_ip}:9090/prediccion')
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')
 			title = 'Predicción de Calidad del Agua - Comparativo Periodos'
 			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
 	return redirect(url_for('login'))
