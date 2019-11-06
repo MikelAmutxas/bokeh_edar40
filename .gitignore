@@ -140,3 +140,4 @@ bokeh_edar40/visualizations/__pycache__/decision_tree.cpython-37.pyc
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+.vscode/settings.json
