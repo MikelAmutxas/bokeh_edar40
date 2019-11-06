@@ -132,3 +132,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 bokeh_edar40/visualizations/__pycache__/decision_tree.cpython-37.pyc
+
+logs/error_log.log
