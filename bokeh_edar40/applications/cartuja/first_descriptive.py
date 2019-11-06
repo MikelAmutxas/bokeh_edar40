@@ -295,8 +295,8 @@ def create_normalize_plot(df):
 	normalize_plot.add_layout(hlabel)
 
 	for i in range(NUM_CLUSTERS):
-		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend=f'Cluster {i}')
-		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], size=8, line_color=bokeh_utils.LINE_COLORS_PALETTE[i],fill_color='white', legend=f'Cluster {i}')
+		normalize_plot.line(x='Indicador', y='valor', source=source_cluster[i], line_dash='dashed', line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[i], legend_label=f'Cluster {i}')
+		normalize_plot.circle(x='Indicador', y='valor', source=source_cluster[i], size=8, line_color=bokeh_utils.LINE_COLORS_PALETTE[i],fill_color='white', legend_label=f'Cluster {i}')
 
 	normalize_plot.border_fill_color = bokeh_utils.BACKGROUND_COLOR
 	normalize_plot.xaxis.major_label_orientation = np.pi/4
@@ -410,7 +410,7 @@ def create_radar_plot(df):
 		clist.append(df[df['cluster'] == cluster])
 		xt, yt = radar_patch((clist[i].valor-DATA_MIN)/(DATA_MAX-DATA_MIN) * 0.5, theta, CENTER)
 		clist[i]=clist[i].assign(**{'xt':xt, 'yt':yt, 'valor_map':(clist[i].valor-DATA_MIN)/(DATA_MAX-DATA_MIN)})
-		nor_rad_pl.patch(x='xt', y='yt', fill_alpha=0.15, fill_color=colors[i], line_color=colors[i], legend=f'Cluster {i}', source=ColumnDataSource(clist[i]))
+		nor_rad_pl.patch(x='xt', y='yt', fill_alpha=0.15, fill_color=colors[i], line_color=colors[i], legend_label=f'Cluster {i}', source=ColumnDataSource(clist[i]))
 		nor_rad_pl.circle(x='xt', y='yt', size=15, fill_color=None, line_color=None ,source=ColumnDataSource(clist[i]), name='radar_plt')
 
 	nor_rad_pl.legend.location = 'bottom_left'

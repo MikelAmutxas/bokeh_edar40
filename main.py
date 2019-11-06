@@ -1,7 +1,14 @@
 from flask import Flask, render_template, session, redirect, url_for, request, flash
-from utils.server_config import SERVER_IP
+from utils.server_config import *
 
 import logging
+# logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+#          			level=logging.INFO,
+#          			datefmt='%Y-%m-%d %H:%M:%S')
+# from tornado.options import parse_command_line
+# parse_command_line()  # parsing Tornado's default config
+from tornado.log import enable_pretty_logging
+enable_pretty_logging()
 
 from bokeh_edar40.server import bk_worker
 
@@ -13,12 +20,12 @@ from threading import Thread
 from subprocess import Popen
 
 app = Flask(__name__)
-# SERVER_IP = '3.10.15.221' # Amazon EC2
-# SERVER_IP = '10.0.20.30' # Vicomtech
 
 #Configuración de secret key y logging cuando ejecutamos sobre Gunicorn
 
 if __name__ != '__main__':
+	formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
 	gunicorn_logger = logging.getLogger('gunicorn.error')
 	gunicorn_logger.setLevel(logging.INFO)
@@ -26,11 +33,13 @@ if __name__ != '__main__':
 	tornado_access_logger = logging.getLogger('tornado.access')
 	tornado_access_logger.setLevel(logging.INFO)
 	tornado_access_handler = logging.FileHandler('logs/error_log.log')
+	tornado_access_handler.setFormatter(formatter)
 	tornado_access_logger.addHandler(tornado_access_handler)
 
 	tornado_application_logger = logging.getLogger('tornado.application')
 	tornado_application_logger.setLevel(logging.INFO)
 	tornado_application_handler = logging.FileHandler('logs/error_log.log')
+	tornado_application_handler.setFormatter(formatter)
 	tornado_application_logger.addHandler(tornado_application_handler)
 
 	app.logger.addHandler(gunicorn_logger.handlers)
@@ -151,7 +160,4 @@ def cartuja_prediction_comp():
 #Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
-	def_user = 'rapidminer'
-	def_pass = 'rapidminer'
-	active_page = 'perfil'
 	app.run(port=9995, debug=False, host='0.0.0.0')

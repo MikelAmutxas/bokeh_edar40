@@ -82,7 +82,7 @@ def create_corrects_plot(df, target):
 	xloc = calc_xoffset_corrects_plot(num_vals=len(xlabels), bar_width=bar_width)
 	for i, label in enumerate(xlabels):
 		r = corrects_plot.vbar(x=dodge('Actual', xloc[i], range=corrects_plot.x_range), top=label, width=bar_width, source=source,
-				color=bokeh_utils.BAR_COLORS_PALETTE[i], legend=value(label), name=xlabels[i])
+				color=bokeh_utils.BAR_COLORS_PALETTE[i], legend_label=str(value(label)), name=xlabels[i])
 		hover = HoverTool(tooltips=[
 			("Predicción", "$name"),
 			("Aciertos", "@$name")
@@ -332,10 +332,10 @@ def create_outlier_plot(df):
 	source_cluster_2 = create_data_source_from_dataframe(df, 'cluster', 'cluster_2')
 	source_cluster_3 = create_data_source_from_dataframe(df, 'cluster', 'cluster_3')
 
-	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_0, color=bokeh_utils.LINE_COLORS_PALETTE[0], size=6, legend='Cluster 0')
-	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_1, color=bokeh_utils.LINE_COLORS_PALETTE[1], size=6, legend='Cluster 1')
-	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_2, color=bokeh_utils.LINE_COLORS_PALETTE[2], size=6, legend='Cluster 2')
-	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_3, color=bokeh_utils.LINE_COLORS_PALETTE[3], size=6, legend='Cluster 3')
+	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_0, color=bokeh_utils.LINE_COLORS_PALETTE[0], size=6, legend_label='Cluster 0')
+	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_1, color=bokeh_utils.LINE_COLORS_PALETTE[1], size=6, legend_label='Cluster 1')
+	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_2, color=bokeh_utils.LINE_COLORS_PALETTE[2], size=6, legend_label='Cluster 2')
+	outlier_plot.circle(x='timestamp', y='outlier', source=source_cluster_3, color=bokeh_utils.LINE_COLORS_PALETTE[3], size=6, legend_label='Cluster 3')
 
 	outlier_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
 	outlier_plot.yaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
@@ -390,10 +390,10 @@ def create_prediction_plot(df):
 
 	x_axis_tick_vals = source_cluster_0.data['añomes'].astype(int) / 10**6
 
-	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_0, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[0], legend='Cluster 0')
-	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_1, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[1], legend='Cluster 1')
-	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_2, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[2], legend='Cluster 2')
-	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_3, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[3], legend='Cluster 3')
+	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_0, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[0], legend_label='Cluster 0')
+	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_1, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[1], legend_label='Cluster 1')
+	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_2, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[2], legend_label='Cluster 2')
+	prediction_plot.line(x='añomes', y='Prediction', source=source_cluster_3, line_width=2, line_color=bokeh_utils.LINE_COLORS_PALETTE[3], legend_label='Cluster 3')
 
 	prediction_plot.xaxis.major_label_orientation = np.pi/4
 	prediction_plot.xaxis.major_label_text_color = bokeh_utils.LABEL_FONT_COLOR
@@ -532,9 +532,9 @@ def create_daily_pred_plot(df_original, target='Calidad_Agua'):
 	daily_pred_plot.extra_y_ranges = {'y_error': Range1d(start=0, end=len(bins))}
 	daily_pred_plot.add_layout(LinearAxis(y_range_name='y_error', axis_label='Error', ticker=list(range(len(bins)))), 'right')
 
-	daily_pred_plot.line(x='timestamp', y='real', source=source, line_width=2, line_color='#392FCC', legend='Real')
-	daily_pred_plot.line(x='timestamp', y='prediction', source=source, line_width=2, line_color='#CA574D', line_dash='dashed', legend='Predicción')
-	daily_pred_plot.line(x='timestamp', y='error', source=source, line_width=2, line_color='green', line_alpha=0.4, legend='Error', y_range_name='y_error')
+	daily_pred_plot.line(x='timestamp', y='real', source=source, line_width=2, line_color='#392FCC', line_alpha=0.8, legend_label='Real')
+	daily_pred_plot.line(x='timestamp', y='prediction', source=source, line_width=2, line_color='#CA574D', line_alpha=0.8, line_dash='dashed', legend_label='Predicción')
+	daily_pred_plot.line(x='timestamp', y='error', source=source, line_width=2, line_color='green', line_alpha=0.4, legend_label='Error', y_range_name='y_error')
 
 
 	daily_pred_plot.xaxis.major_label_orientation = np.pi/4
