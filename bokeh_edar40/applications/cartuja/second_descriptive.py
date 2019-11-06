@@ -82,7 +82,7 @@ def create_corrects_plot(df, target):
 	xloc = calc_xoffset_corrects_plot(num_vals=len(xlabels), bar_width=bar_width)
 	for i, label in enumerate(xlabels):
 		r = corrects_plot.vbar(x=dodge('Actual', xloc[i], range=corrects_plot.x_range), top=label, width=bar_width, source=source,
-				color=bokeh_utils.BAR_COLORS_PALETTE[i], legend_label=str(value(label)), name=xlabels[i])
+				color=bokeh_utils.BAR_COLORS_PALETTE[i], legend_label=label, name=xlabels[i])
 		hover = HoverTool(tooltips=[
 			("Predicción", "$name"),
 			("Aciertos", "@$name")
