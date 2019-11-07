@@ -1,14 +1,22 @@
 from flask import Flask, render_template, session, redirect, url_for, request, flash
+from utils.server_config import *
 
 import logging
+# logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+#          			level=logging.INFO,
+#          			datefmt='%Y-%m-%d %H:%M:%S')
+# from tornado.options import parse_command_line
+# parse_command_line()  # parsing Tornado's default config
+from tornado.log import enable_pretty_logging
+enable_pretty_logging()
 
-from bokeh_edar40.server import *
+from bokeh_edar40.server import bk_worker
 
 from bokeh.embed import server_document
 
 from threading import Thread
 
-import pam
+# import pam
 from subprocess import Popen
 
 app = Flask(__name__)
@@ -16,6 +24,8 @@ app = Flask(__name__)
 #Configuración de secret key y logging cuando ejecutamos sobre Gunicorn
 
 if __name__ != '__main__':
+	formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
 	gunicorn_logger = logging.getLogger('gunicorn.error')
 	gunicorn_logger.setLevel(logging.INFO)
@@ -23,11 +33,13 @@ if __name__ != '__main__':
 	tornado_access_logger = logging.getLogger('tornado.access')
 	tornado_access_logger.setLevel(logging.INFO)
 	tornado_access_handler = logging.FileHandler('logs/error_log.log')
+	tornado_access_handler.setFormatter(formatter)
 	tornado_access_logger.addHandler(tornado_access_handler)
 
 	tornado_application_logger = logging.getLogger('tornado.application')
 	tornado_application_logger.setLevel(logging.INFO)
 	tornado_application_handler = logging.FileHandler('logs/error_log.log')
+	tornado_application_handler.setFormatter(formatter)
 	tornado_application_logger.addHandler(tornado_application_handler)
 
 	app.logger.addHandler(gunicorn_logger.handlers)
@@ -35,85 +47,117 @@ if __name__ != '__main__':
 	app.logger.addHandler(tornado_application_logger.handlers)
 	app.logger.setLevel(logging.INFO)
 
-#Usamos este diccionario para mapear los usuarios diponibles a los principales de kerberos. Tenemos dos principales, uno para cada caso de uso
-#si accedemos al caso de uso de EDAR Epele, accedemos mediante el principal bokeh-epele y si accedemos al caso de uso EDAR La Cartuja accedemos con el principal
-#bokeh-cartuja. En el caso de uso de La Cartuja no sería necesario ingresar mediante Kerberos, ya que, el propio software RapidMiner ya está configurado con esta opción 
-#y por lo tanto realiza la autenticación mediante Kerberos cuando es necesario.
-user_principal_mapping = {'ibermatica': 'bokeh-epele', 'rapidminer': 'bokeh-cartuja'}
-
-def do_kerberos_kinit(username):
-	kinit = '/usr/bin/kinit'
-	kinitopt = '-kt'
-	#Para pruebas en local
-	#keytab = '/Users/mikelamuchastegui/' +str(username)+'.keytab'
-	keytab = '/etc/security/keytabs/'+str(username)+'.keytab'
-	principal = str(username)
-	realm = 'EDAR40.EUS'
-	kinit_args = [ kinit, kinitopt, keytab, principal ]
-	kinit = Popen(kinit_args)
-
-def do_kerberos_kdestroy():
-	kdestroy = '/usr/bin/kdestroy'
-	kdestroy_args = [ kdestroy ]
-	kdestroy = Popen(kdestroy_args)
-
 Thread(target=bk_worker).start()
-
-#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/cartuja/prediccion', methods=['GET'])
-def cartuja_prediction():
-	script = server_document('http://localhost:9090/cartuja/prediccion')
-	return render_template('cartuja.html', script=script)
-
-#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/epele', methods=['GET'])
-def epele():
-	script = server_document('http://localhost:9090/epele')
-	return render_template('epele.html', script=script)
-
-#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
-@app.route('/cartuja', methods=['GET'])
-def cartuja():
-	script = server_document('http://localhost:9090/cartuja')
-	return render_template('cartuja.html', script=script)
 
 @app.route('/', methods=['GET'])
 def index():
 	if 'username' in session:
 		username = str(session.get('username'))
 		if username == 'rapidminer':
-			return redirect(url_for('cartuja'))
-		else:
-			return redirect(url_for('epele'))
+			return redirect(url_for('perfil'))
 	return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+	active_page = 'login'
 	if request.method == 'POST':
-		p = pam.pam()
 		username = request.form['username']
 		password = request.form['password']
 
-		if p.authenticate(str(username), str(password)) and user_principal_mapping[str(username)] is not None:
+		if str(username) == def_user and str(password) == def_pass:
 			session['username'] = request.form['username']
-			do_kerberos_kinit(user_principal_mapping[str(username)])
+			# next_page = request.args.get('next')
+			# print(next_page)
+			# return redirect(next_page) if next_page else redirect(url_for('index'))
 			return redirect(url_for('index'))
 		else:
 			flash('Login incorrecto, inténtalo otra vez')
-
-	return render_template('login.html')
+	return render_template('login.html', active_page=active_page)
 
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.pop('username', None)
-	do_kerberos_kdestroy()
 	return redirect(url_for('index'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/perfil', methods=['GET'])
+@app.route('/perfil/periodo1', methods=['GET'])
+def perfil():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja', relative_urls=True)
+			script = server_document(f'http://{SERVER_IP}:9090/perfil', arguments={'periodo':1})
+			title = 'Calidad del Agua - Periodo 1'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+@app.route('/perfil/periodo2', methods=['GET'])
+def perfil_p2():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja', relative_urls=True)	
+			script = server_document(f'http://{SERVER_IP}:9090/perfil', arguments={'periodo':2})
+			title = 'Calidad del Agua - Periodo 2'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+@app.route('/perfil/comparativo', methods=['GET'])
+def perfil_comp():
+	active_page = 'perfil'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja', relative_urls=True)
+			script = server_document(f'http://{SERVER_IP}:9090/perfil')
+			title = 'Calidad del Agua - Comparativo Periodos'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion', methods=['GET'])
+@app.route('/prediccion/periodo1', methods=['GET'])
+def cartuja_prediction():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')
+			title = 'Predicción de Calidad del Agua - Periodo 1'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion/periodo2', methods=['GET'])
+def cartuja_prediction_p2():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')							
+			title = 'Predicción de Calidad del Agua - Periodo 2'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
+
+#Usamos localhost porque estamos probando la aplicación localmente, una vez ejecutando la aplicación sobre el servidor cambiamos la IP a la adecuada.
+@app.route('/prediccion/comparativo', methods=['GET'])
+def cartuja_prediction_comp():
+	active_page = 'prediccion'
+	if 'username' in session:
+		username = str(session.get('username'))
+		if username == 'rapidminer':
+			# script = server_document(url=r'/cartuja/prediccion', relative_urls=True)
+			script = server_document(f'http://{SERVER_IP}:9090/prediccion')
+			title = 'Predicción de Calidad del Agua - Comparativo Periodos'
+			return render_template('cartuja.html', script=script, active_page=active_page, title = title)
+	return redirect(url_for('login'))
 
 #Configuración cuando ejecutamos unicamente Flask sin Gunicorn, en modo de prueba
 if __name__ == '__main__':
 	app.secret_key = '[]V\xf0\xed\r\x84L,p\xc59n\x98\xbc\x92'
-	app.run(port=9995, debug=True, host='localhost')
-
-
-
-
+	app.run(port=9995, debug=False, host='0.0.0.0')

@@ -118,7 +118,8 @@ class Tree:
 		return middle_x, middle_y, middle_text
 
 	def order_nodes(self, tree_node, node_link_text):
-		"""Ordena la lista de nodos. Para ello, recorre los nodos, busca el primer nodo de un nivel superior al nuevo nodo a insertar y cabia los parámetros childrens y parent de ambos nodos.
+		"""Ordena la lista de nodos. Para ello, recorre los nodos, busca el primer nodo de un
+		nivel superior al nuevo nodo a insertar y cambia los parámetros childrens y parent de ambos nodos.
 		Como el árbol en el fichero XML se obtiene de forma ordenada esto es correcto.
 
 		"""
@@ -126,16 +127,21 @@ class Tree:
 		for node in reversed(self.node_list):
 			# Si la lista ya contiene un nodo de mismo nombre y nivel de profundidad, puede que el nodo esté repetido
 			if node.level == tree_node.level and node.name == tree_node.name:
+				# Si existe un nodo con el mismo link_text que el que estamos analizando, será un nodo repetido. Tenemos que ignorarlo.
+				if node_link_text in node.link_text:
+					add = False
+					break
 				# Si el nodo padre tiene asignadas más condiciones de relación que número de hijos, el nodo no está repetido. Existe un nodo de mismo nombre y nivel de profundidad que debemos añadir a la lista
 				if node.parent is not None and (len(node.parent.link_text) > len(node.parent.childrens)):
 						add = True
 						tree_node.parent = node.parent
 						node.parent.add_children(tree_node)
 						break
+				
 				tree_node.id = node.id
 				node.add_link_text(node_link_text)
 				add = False
-	
+
 			if node.level < tree_node.level:
 				if add:
 					tree_node.parent = node
@@ -243,17 +249,3 @@ class Node:
 				x_pos = self.childrens[i].parent.x + (x_gap*(i+1)) - (x_gap*(len(self.childrens)-i))
 				self.childrens[i].x = x_pos
 				self.childrens[i].y = y_pos
-
-
-
-
-
-
-
-
-
-
-
-
-
-

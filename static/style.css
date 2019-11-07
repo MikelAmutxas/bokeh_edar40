@@ -1,15 +1,46 @@
-p {
-    font: "Libre Baskerville", sans-serif;
-    text-align: justify;
-    text-justify: inter-word;
-    width: 80%;
-    max-width: 800;
+a {
+    cursor: pointer;
 }
 
-.content {
-    padding: 5px;
+.navbar-brand span {
+	font-size:1.2rem;
+	line-height:1.2;
+	/* font-weight: 200; */
+	display:inline-block;    
+    vertical-align:middle;
+	/* padding:0 0 0 15px; */
+}
+.navbar-brand b {
+	display:block;
+    font-size:80%;
+    font-weight: 300;
+	line-height:1;
 }
 
-.display-3 {
-    text-align: center;
+body {
+    color: #858796;
+    background-color: #f8f9fc;
+}
+
+.bg-edar {
+    background-color: #3576be;
+}
+
+.h3 {
+    font-weight: 400;
+    /* font-size: 25px; */
+    line-height: 1.2;
+}
+
+.h3, h3 {
+    font-size: 1.75rem;
+}
+
+
+/* .shadow {
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15)!important;
+} */
+
+.text-gray-800 {
+    color: #5a5c69!important;   
 }
